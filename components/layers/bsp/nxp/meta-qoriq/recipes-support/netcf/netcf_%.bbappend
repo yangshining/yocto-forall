@@ -1,0 +1,1 @@
+RDEPENDS:netcf += "libxml2"
