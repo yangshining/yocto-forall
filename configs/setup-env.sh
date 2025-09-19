@@ -94,7 +94,7 @@ reference manual which can be found at:
 For more information about OpenEmbedded see their website:
     http://www.openembedded.org/
 
-You can now run 'bb <target> or yb <target>'
+You can now run 'bitbake <target> or yb <target>'
     fsl-image-networking
     fsl-image-networking-full
 "
@@ -118,11 +118,11 @@ Machine: $MACHINE
 Distro: $DISTRO
 BSP Layer: $MACHINE_LAYER
 
-You can now run 'bb <target>' to build images, for example:
-    bb core-image-minimal
-    bb core-image-base
-    bb fsl-image-networking (for Freescale machines)
-    bb rockchip-image (for Rockchip machines)
+You can now run 'bitbake <target>' to build images, for example:
+    bitbake core-image-minimal
+    bitbake core-image-base
+    bitbake fsl-image-networking (for Freescale machines)
+    bitbake rockchip-image (for Rockchip machines)
 "
     echo "To return to this build environment later please run:"
     echo "    . $PROJECT_DIR/SOURCE_THIS"
@@ -168,6 +168,14 @@ usage() {
 
     echo "    STM32MP machines:"
     find ${TOP_DIR}/components/layers/bsp/stm32mp/meta-st-stm32mp/conf/machine \
+        -name "*.conf" 2>/dev/null | \
+        sed 's,.*/,,g;s,.conf,,g' | sort | \
+        while read machine; do
+            echo "      $machine"
+        done
+
+    echo "    Raspberrypi machines:"
+    find ${TOP_DIR}/components/layers/bsp/raspberrypi/meta-raspberrypi/conf/machine \
         -name "*.conf" 2>/dev/null | \
         sed 's,.*/,,g;s,.conf,,g' | sort | \
         while read machine; do
@@ -233,20 +241,20 @@ fi
 valid_machine=false
 
 # Auto-default MACHINE for STM32MP if not provided
-if [ -z "${MACHINE}" ]; then
-    if [ -d "${TOP_DIR}/components/layers/bsp/stm32mp/meta-st-stm32mp/conf/machine" ]; then
-        if [ -f "${TOP_DIR}/components/layers/bsp/stm32mp/meta-st-stm32mp/conf/machine/stm32mp15-eval.conf" ]; then
-            MACHINE="stm32mp15-eval"
-        elif [ -f "${TOP_DIR}/components/layers/bsp/stm32mp/meta-st-stm32mp/conf/machine/stm32mp15-disco.conf" ]; then
-            MACHINE="stm32mp15-disco"
-        else
-            MACHINE=`ls ${TOP_DIR}/components/layers/bsp/stm32mp/meta-st-stm32mp/conf/machine/*.conf 2>/dev/null | head -1 | sed 's,.*/,,;s,.conf$,,'`
-        fi
-        if [ -n "$MACHINE" ]; then
-            echo "Auto-selected MACHINE: $MACHINE (STM32MP)"
-        fi
-    fi
-fi
+# if [ -z "${MACHINE}" ]; then
+#     if [ -d "${TOP_DIR}/components/layers/bsp/stm32mp/meta-st-stm32mp/conf/machine" ]; then
+#         if [ -f "${TOP_DIR}/components/layers/bsp/stm32mp/meta-st-stm32mp/conf/machine/stm32mp15-eval.conf" ]; then
+#             MACHINE="stm32mp15-eval"
+#         elif [ -f "${TOP_DIR}/components/layers/bsp/stm32mp/meta-st-stm32mp/conf/machine/stm32mp15-disco.conf" ]; then
+#             MACHINE="stm32mp15-disco"
+#         else
+#             MACHINE=`ls ${TOP_DIR}/components/layers/bsp/stm32mp/meta-st-stm32mp/conf/machine/*.conf 2>/dev/null | head -1 | sed 's,.*/,,;s,.conf$,,'`
+#         fi
+#         if [ -n "$MACHINE" ]; then
+#             echo "Auto-selected MACHINE: $MACHINE (STM32MP)"
+#         fi
+#     fi
+# fi
 
 if [ -n "${MACHINE}" ];then
     # Find all machine configuration files
@@ -323,6 +331,10 @@ case "$MACHINE_LAYER" in
         ;;
     meta-st-stm32mp)
         BSP_LAYER_LIST="meta-st-stm32mp"
+        DISTRO="poky"
+        ;;
+    meta-raspberrypi)
+        BSP_LAYER_LIST="meta-raspberrypi"
         DISTRO="poky"
         ;;
     *)
@@ -453,6 +465,17 @@ for layer in $(eval echo $LAYER_LIST); do
     fi
 done
 
+# add all meta-* layers under project-spec to bblayers.conf
+for layer_dir in "${TOP_DIR}"/project-spec/meta-*; do
+    if [ -d "$layer_dir" ]; then
+        append_layer="$(readlink -f "$layer_dir")"
+        echo "Adding layer: $append_layer"
+        awk '/  "$/ && !x {print "'"  ${append_layer}"' \\"; x=1} 1' \
+            conf/bblayers.conf > conf/bblayers.conf~
+        mv conf/bblayers.conf~ conf/bblayers.conf
+    fi
+done
+
 cat >> conf/local.conf <<-EOF
 
 # Parallelism Options
@@ -541,6 +564,39 @@ EOF
 # STM32MP specific settings
 PREFERRED_PROVIDER_virtual/kernel = "linux-stm32mp"
 PREFERRED_PROVIDER_u-boot = "u-boot-stm32mp"
+
+EOF
+        ;;
+    meta-raspberrypi)
+        # Raspberrypi specific configurations
+        cat >>conf/local.conf <<-EOF
+
+# Raspberrypi specific settings
+PREFERRED_PROVIDER_virtual/kernel = "linux-raspberrypi"
+PREFERRED_PROVIDER_virtual/bootloader = "u-boot"
+PREFERRED_PROVIDER_u-boot = "u-boot"
+
+# Enable U-Boot for Raspberry Pi
+RPI_USE_U_BOOT = "1"
+
+# U-Boot specific configurations
+# Note: UBOOT_MACHINE and UBOOT_ARCH will be set by machine config
+# For 64-bit RPi: UBOOT_MACHINE = "rpi_arm64_config", KERNEL_BOOTCMD = "booti", KERNEL_IMAGETYPE_UBOOT = "Image"
+# For 32-bit RPi: UBOOT_MACHINE = "rpi_config", KERNEL_BOOTCMD = "bootm", KERNEL_IMAGETYPE_UBOOT = "uImage"
+
+# Enable I2C and SPI by default
+ENABLE_I2C = "1"
+ENABLE_SPI = "1"
+
+# Enable camera interface
+ENABLE_CAMERA = "1"
+
+# Enable UART
+ENABLE_UART = "1"
+
+# U-Boot environment configuration
+UBOOT_ENV_SIZE = "0x20000"
+UBOOT_ENV_OFFSET = "0x100000"
 
 EOF
         ;;
