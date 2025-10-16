@@ -17,7 +17,7 @@ DEPENDS = " \
     libgpg-error \
 "
 
-SRCREV = "ff962bb92d7f5fea9f819c4ef8a484bdceb3747b"
+SRCREV = "8f2b80ffbd2518c2e95ddd092e009cc385a0633c"
 SRC_URI = " \
     git://github.com/containers/podman-tui;protocol=https;branch=main \
 "
@@ -29,7 +29,7 @@ GO_IMPORT = "import"
 
 S = "${WORKDIR}/git"
 
-PV = "v0.3.0+git${SRCPV}"
+PV = "v0.5.0+git${SRCPV}"
 
 PODMAN_PKG = "github.com/containers/podman-tui"
 
@@ -54,7 +54,7 @@ do_compile() {
 	export GOFLAGS="-mod=vendor"
 
 	# oe_runmake BUILDTAGS="${BUILDTAGS}"
-	${GO} build -tags "$(BUILDTAGS)" ${GO_LDFLAGS} -o bin/podman-tui
+	${GO} build -trimpath -tags "$(BUILDTAGS)" ${GO_LDFLAGS} -o bin/podman-tui
 }
 
 do_install() {

@@ -17,13 +17,11 @@ DEPENDS = " \
     ${@bb.utils.filter('DISTRO_FEATURES', 'systemd', d)} \
 "
 
-SRCREV = "717edd7b844dcd66468f5d991991d87e9fc14c12"
+SRCREV = "754ec89a8a185d308ca5ed08afaf34d6cbda08da"
 SRC_URI = " \
-    git://github.com/containers/libpod.git;branch=v4.0;protocol=https \
-    file://0001-Rename-BUILDFLAGS-to-GOBUILDFLAGS.patch;patchdir=src/import \
-    file://0002-Define-ActKillThread-equal-to-ActKill.patch;patchdir=src/import/vendor/github.com/seccomp/libseccomp-golang \
-    file://CVE-2022-27649.patch;patchdir=src/import \
+    git://github.com/containers/libpod.git;branch=v4.2;protocol=https \
     ${@bb.utils.contains('PACKAGECONFIG', 'rootless', 'file://50-podman-rootless.conf', '', d)} \
+    file://run-ptest \
 "
 
 LICENSE = "Apache-2.0"
@@ -33,7 +31,7 @@ GO_IMPORT = "import"
 
 S = "${WORKDIR}/git"
 
-PV = "4.0.1+git${SRCPV}"
+PV = "4.2.0+git${SRCPV}"
 
 PACKAGES =+ "${PN}-contrib"
 
@@ -48,8 +46,11 @@ export LDFLAGS=""
 # https://github.com/llvm/llvm-project/issues/53999
 TOOLCHAIN = "gcc"
 
+# podmans Makefile expects BUILDFLAGS to be set but go.bbclass defines them in GOBUILDFLAGS
+export BUILDFLAGS="${GOBUILDFLAGS}"
+
 inherit go goarch
-inherit systemd pkgconfig
+inherit systemd pkgconfig ptest
 
 do_configure[noexec] = "1"
 
@@ -110,6 +111,17 @@ do_install() {
 	fi
 }
 
+do_install_ptest () {
+	cp ${S}/src/import/Makefile ${D}${PTEST_PATH}
+	install -d ${D}${PTEST_PATH}/test
+	cp -r ${S}/src/import/test/system ${D}${PTEST_PATH}/test
+
+	# Some compatibility links for the Makefile assumptions.
+	install -d ${D}${PTEST_PATH}/bin
+	ln -s ${bindir}/podman ${D}${PTEST_PATH}/bin/podman
+	ln -s ${bindir}/podman-remote ${D}${PTEST_PATH}/bin/podman-remote
+}
+
 FILES:${PN} += " \
     ${systemd_unitdir}/system/* \
     ${systemd_unitdir}/user/* \
@@ -129,3 +141,16 @@ RDEPENDS:${PN} += "\
 "
 RRECOMMENDS:${PN} += "slirp4netns kernel-module-xt-masquerade kernel-module-xt-comment"
 RCONFLICTS:${PN} = "${@bb.utils.contains('PACKAGECONFIG', 'docker', 'docker', '', d)}"
+
+RDEPENDS:${PN}-ptest += " \
+	bash \
+	bats \
+	buildah \
+	catatonit \
+	coreutils \
+	file \
+	gnupg \
+	jq \
+	make \
+	tar \
+"

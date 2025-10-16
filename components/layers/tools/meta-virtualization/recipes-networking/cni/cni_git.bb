@@ -9,14 +9,13 @@ Because of this focus, CNI has a wide range of support and the specification \
 is simple to implement. \
 "
 
-SRCREV_cni = "35efaabf93d23a28fb2fb01dccbe80caed196d19"
-# Version 0.9.1
-SRCREV_plugins = "b8a10bbe111e9db72433f357c37077554ada7ca1"
+SRCREV_cni = "940e66269988c38f4c09b00bda4456d2db007b35"
+SRCREV_plugins = "4744ec27b89c083194e7df498de50f03a8a1d3ec"
 SRCREV_flannel_plugin = "076c4462d6c6887614fc881b806b690b9e56ceb2"
 SRCREV_FORMAT = "cni_plugins"
 SRC_URI = "\
-	git://github.com/containernetworking/cni.git;nobranch=1;name=cni;protocol=https \
-        git://github.com/containernetworking/plugins.git;nobranch=1;destsuffix=${S}/src/github.com/containernetworking/plugins;name=plugins;protocol=https \
+	git://github.com/containernetworking/cni.git;branch=main;name=cni;protocol=https \
+        git://github.com/containernetworking/plugins.git;branch=release-1.1;destsuffix=${S}/src/github.com/containernetworking/plugins;name=plugins;protocol=https \
         git://github.com/flannel-io/cni-plugin;branch=main;name=flannel_plugin;protocol=https;destsuffix=${S}/src/github.com/containernetworking/plugins/plugins/meta/flannel \
 	"
 LICENSE = "Apache-2.0"
@@ -24,7 +23,7 @@ LIC_FILES_CHKSUM = "file://src/import/LICENSE;md5=fa818a259cbed7ce8bc2a22d35a464
 
 GO_IMPORT = "import"
 
-PV = "v1.0.1+git${SRCREV_cni}"
+PV = "v1.1.0+git${SRCREV_cni}"
 
 inherit go
 inherit goarch
@@ -39,10 +38,10 @@ do_compile() {
 	export GO111MODULE=off
 
 	cd ${B}/src/github.com/containernetworking/cni/libcni
-	${GO} build
+	${GO} build -trimpath
 
 	cd ${B}/src/github.com/containernetworking/cni/cnitool
-	${GO} build
+	${GO} build -trimpath
 
 	cd ${B}/src/github.com/containernetworking/plugins
 	PLUGINS="$(ls -d plugins/meta/*; ls -d plugins/ipam/*; ls -d plugins/main/* | grep -v windows)"
@@ -50,7 +49,7 @@ do_compile() {
 	for p in $PLUGINS; do
 	    plugin="$(basename "$p")"
 	    echo "building: $p"
-	    ${GO} build -o ${B}/plugins/bin/$plugin github.com/containernetworking/plugins/$p
+	    ${GO} build -trimpath -o ${B}/plugins/bin/$plugin github.com/containernetworking/plugins/$p
 	done
 }
 

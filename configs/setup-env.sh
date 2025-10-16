@@ -74,7 +74,7 @@ if [ "$(whoami)" = "root" ]; then
     return
 fi
 
-MACHINE=""
+MACHINE="zynqmp-generic"
 
 OEROOTDIR=${TOP_DIR}/components/layers/core/poky
 if [ -e ${TOP_DIR}/components/layers/core/oe-core ]; then
@@ -240,25 +240,9 @@ fi
 # Check the machine type specified
 valid_machine=false
 
-# Auto-default MACHINE for STM32MP if not provided
-# if [ -z "${MACHINE}" ]; then
-#     if [ -d "${TOP_DIR}/components/layers/bsp/stm32mp/meta-st-stm32mp/conf/machine" ]; then
-#         if [ -f "${TOP_DIR}/components/layers/bsp/stm32mp/meta-st-stm32mp/conf/machine/stm32mp15-eval.conf" ]; then
-#             MACHINE="stm32mp15-eval"
-#         elif [ -f "${TOP_DIR}/components/layers/bsp/stm32mp/meta-st-stm32mp/conf/machine/stm32mp15-disco.conf" ]; then
-#             MACHINE="stm32mp15-disco"
-#         else
-#             MACHINE=`ls ${TOP_DIR}/components/layers/bsp/stm32mp/meta-st-stm32mp/conf/machine/*.conf 2>/dev/null | head -1 | sed 's,.*/,,;s,.conf$,,'`
-#         fi
-#         if [ -n "$MACHINE" ]; then
-#             echo "Auto-selected MACHINE: $MACHINE (STM32MP)"
-#         fi
-#     fi
-# fi
-
 if [ -n "${MACHINE}" ];then
     # Find all machine configuration files
-    valid_num=`find ${TOP_DIR}/components/layers/bsp/*/meta-*/conf/machine \
+    valid_num=`find ${TOP_DIR}/components/layers/bsp/* \
         -name ${MACHINE}.conf 2>/dev/null |wc -l`
     
     if [ "1" -lt "$valid_num" ];then
@@ -273,13 +257,13 @@ if [ -n "${MACHINE}" ];then
         find ${TOP_DIR}/components/layers/bsp/*/meta-*/conf/machine \
             -name "*.conf" 2>/dev/null | \
             sed 's,.*/,,g;s,.conf,,g' | sort | \
-            while read machine; do
-                echo "  - $machine"
-            done
+            # while read machine; do
+            #     echo "  - $machine"
+            # done
         usage && clean_up && return
     else
         # Find which layer contains this machine
-        MACHINE_LAYER=`find ${TOP_DIR}/components/layers/bsp/*/meta-*/conf/machine \
+        MACHINE_LAYER=`find ${TOP_DIR}/components/layers/bsp/* \
             -name ${MACHINE}.conf 2>/dev/null | head -1 | \
             sed 's,.*/components/layers/bsp/\([^/]*\)/meta-\([^/]*\)/.*,meta-\2,'`
         echo "Found machine '$MACHINE' in layer: $MACHINE_LAYER"
@@ -308,6 +292,11 @@ BASE_LAYER_LIST=" \
     meta-openembedded/meta-filesystems \
     meta-openembedded/meta-webserver \
     meta-openembedded/meta-perl \
+    meta-openembedded/meta-xfce \
+    meta-openembedded/meta-initramfs \
+    meta-arm/meta-arm-toolchain \
+    meta-arm/meta-arm \
+    meta-arm/meta-arm-bsp \
 "
 
 # Define BSP layer list based on machine type
@@ -326,8 +315,27 @@ case "$MACHINE_LAYER" in
         DISTRO="poky"
         ;;
     meta-xilinx)
-        BSP_LAYER_LIST="meta-xilinx"
-        DISTRO="poky"
+        BSP_LAYER_LIST=" \
+            meta-xilinx-tools \
+            meta-petalinux \
+            meta-security \
+            meta-tpm \
+            meta-microblaze \
+            meta-xilinx-bsp \
+            meta-xilinx-core \
+            meta-xilinx-contrib \
+            meta-xilinx-standalone \
+            meta-qt5 \
+            meta-virtualization \
+            meta-openamp \
+            meta-ros-common  \
+            meta-ros2 \
+            meta-ros2-humble \
+            meta-system-controller \
+            meta-xilinx-tsn \
+            meta-kria \
+            "
+        DISTRO="petalinux"
         ;;
     meta-st-stm32mp)
         BSP_LAYER_LIST="meta-st-stm32mp"
@@ -338,9 +346,8 @@ case "$MACHINE_LAYER" in
         DISTRO="poky"
         ;;
     *)
-        # Default to freescale if layer not recognized
-        BSP_LAYER_LIST="meta-freescale"
-        DISTRO="fsl-qoriq"
+        echo "ERROR: Layer not find"
+        return
         ;;
 esac
 
@@ -449,9 +456,9 @@ for layer in $(eval echo $LAYER_LIST); do
     # Then check in BSP layers (support new vendor directory structure)
     elif [ -e ${TOP_DIR}/components/layers/bsp/${layer} ]; then
         append_layer="${TOP_DIR}/components/layers/bsp/${layer}"
-    # Check in vendor subdirectories
-    elif [ -e ${TOP_DIR}/components/layers/bsp/*/${layer} ]; then
-        append_layer=`find ${TOP_DIR}/components/layers/bsp -name ${layer} -type d | head -1`
+    else
+        # Check in all subdirectories
+        append_layer=`find ${TOP_DIR}/components/layers/ -name ${layer} -type d | head -1`
     fi
     
     if [ -n "${append_layer}" ]; then
@@ -554,6 +561,9 @@ EOF
 
 # Xilinx specific settings
 PREFERRED_PROVIDER_virtual/kernel = "linux-xlnx"
+LICENSE_FLAGS_ACCEPTED = "xilinx"
+
+USE_XSCT_TARBALL = "1"
 
 EOF
         ;;
@@ -662,6 +672,7 @@ if [ ! -e SOURCE_THIS ]; then
 fi
 
 prompt_com_message
-cd $PROJECT_DIR
+# cd $PROJECT_DIR
+cd $TOP_DIR
 clean_up
 
