@@ -1,0 +1,42 @@
+[submodule "components/layers/bsp/xilinx/meta-xilinx"]
+	path = components/layers/bsp/xilinx/meta-xilinx
+	url = https://github.com/Xilinx/meta-xilinx.git
+[submodule "components/layers/bsp/xilinx/meta-petalinux"]
+	path = components/layers/bsp/xilinx/meta-petalinux
+	url = https://github.com/Xilinx/meta-petalinux.git
+[submodule "components/layers/bsp/xilinx/meta-security"]
+	path = components/layers/bsp/xilinx/meta-security
+	url = https://github.com/Xilinx/meta-security.git
+[submodule "components/layers/bsp/xilinx/meta-xilinx-tools"]
+	path = components/layers/bsp/xilinx/meta-xilinx-tools
+	url = https://github.com/Xilinx/meta-xilinx-tools.git
+[submodule "components/layers/bsp/xilinx/meta-system-controller"]
+	path = components/layers/bsp/xilinx/meta-system-controller
+	url = https://github.com/Xilinx/meta-system-controller.git
+[submodule "components/layers/core/poky"]
+	path = components/layers/core/poky
+	url = https://git.yoctoproject.org/poky
+[submodule "components/layers/core/meta-openembedded"]
+	path = components/layers/core/meta-openembedded
+	url = https://git.openembedded.org/meta-openembedded
+[submodule "components/layers/core/meta-arm"]
+	path = components/layers/core/meta-arm
+	url = https://git.yoctoproject.org/meta-arm
+[submodule "components/layers/bsp/raspberrypi/meta-raspberrypi"]
+	path = components/layers/bsp/raspberrypi/meta-raspberrypi
+	url = https://git.yoctoproject.org/meta-raspberrypi
+[submodule "components/layers/bsp/rockchip/meta-rockchip"]
+	path = components/layers/bsp/rockchip/meta-rockchip
+	url = https://github.com/JeffyCN/meta-rockchip.git
+[submodule "components/layers/bsp/stm32mp/meta-st-stm32mp"]
+	path = components/layers/bsp/stm32mp/meta-st-stm32mp
+	url = https://github.com/STMicroelectronics/meta-st-stm32mp.git
+[submodule "components/layers/bsp/nxp/meta-freescale"]
+	path = components/layers/bsp/nxp/meta-freescale
+	url = https://git.yoctoproject.org/meta-freescale
+[submodule "components/layers/tools/meta-clang"]
+	path = components/layers/tools/meta-clang
+	url = https://github.com/kraj/meta-clang.git
+[submodule "components/layers/tools/meta-qt5"]
+	path = components/layers/tools/meta-qt5
+	url = https://github.com/meta-qt5/meta-qt5.git
