@@ -43,3 +43,6 @@
 [submodule "components/layers/bsp/stm32mp/meta-st-openstlinux"]
 	path = components/layers/bsp/stm32mp/meta-st-openstlinux
 	url = https://github.com/STMicroelectronics/meta-st-openstlinux.git
+[submodule "components/layers/bsp/nvidia/meta-tegra"]
+	path = components/layers/bsp/nvidia/meta-tegra
+	url = https://github.com/OE4T/meta-tegra.git
