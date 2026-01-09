@@ -40,3 +40,6 @@
 [submodule "components/layers/bsp/xilinx/meta-system-controller"]
 	path = components/layers/bsp/xilinx/meta-system-controller
 	url = https://github.com/Xilinx/meta-system-controller.git
+[submodule "components/layers/bsp/stm32mp/meta-st-openstlinux"]
+	path = components/layers/bsp/stm32mp/meta-st-openstlinux
+	url = https://github.com/STMicroelectronics/meta-st-openstlinux.git
