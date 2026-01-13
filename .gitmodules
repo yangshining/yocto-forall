@@ -46,3 +46,12 @@
 [submodule "components/layers/bsp/nvidia/meta-tegra"]
 	path = components/layers/bsp/nvidia/meta-tegra
 	url = https://github.com/OE4T/meta-tegra.git
+[submodule "components/layers/bsp/xilinx/meta-openamp"]
+	path = components/layers/bsp/xilinx/meta-openamp
+	url = https://github.com/Xilinx/meta-openamp.git
+[submodule "components/layers/bsp/xilinx/meta-virtualization"]
+	path = components/layers/bsp/xilinx/meta-virtualization
+	url = https://github.com/Xilinx/meta-virtualization.git
+[submodule "components/layers/bsp/xilinx/meta-xilinx-tsn"]
+	path = components/layers/bsp/xilinx/meta-xilinx-tsn
+	url = https://github.com/Xilinx/meta-xilinx-tsn.git

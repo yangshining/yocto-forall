@@ -74,7 +74,7 @@ if [ "$(whoami)" = "root" ]; then
     return
 fi
 
-MACHINE="zynqmp-generic"
+MACHINE="zynqmp-eg-generic"
 
 OEROOTDIR=${TOP_DIR}/components/layers/core/poky
 if [ -e ${TOP_DIR}/components/layers/core/oe-core ]; then
@@ -318,7 +318,6 @@ case "$MACHINE_LAYER" in
         BSP_LAYER_LIST=" \
             meta-xilinx-tools \
             meta-petalinux \
-            meta-security \
             meta-tpm \
             meta-microblaze \
             meta-xilinx-bsp \
@@ -328,12 +327,7 @@ case "$MACHINE_LAYER" in
             meta-qt5 \
             meta-virtualization \
             meta-openamp \
-            meta-ros-common  \
-            meta-ros2 \
-            meta-ros2-humble \
-            meta-system-controller \
             meta-xilinx-tsn \
-            meta-kria \
             "
         DISTRO="petalinux"
         ;;
@@ -457,16 +451,21 @@ for layer in $(eval echo $LAYER_LIST); do
     elif [ -e ${TOP_DIR}/components/layers/bsp/${layer} ]; then
         append_layer="${TOP_DIR}/components/layers/bsp/${layer}"
     else
-        # Check in all subdirectories
-        append_layer=`find ${TOP_DIR}/components/layers/ -name ${layer} -type d | head -1`
+        # Check in all subdirectories, excluding dynamic-layers
+        append_layer=`find ${TOP_DIR}/components/layers/ -path "*/dynamic-layers" -prune -o -name ${layer} -type d -print | head -1`
     fi
     
     if [ -n "${append_layer}" ]; then
         append_layer=`readlink -f $append_layer`
-        echo "Adding layer: $append_layer"
-        awk '/  "$/ && !x {print "'"  ${append_layer}"' \\"; x=1} 1' \
-            conf/bblayers.conf > conf/bblayers.conf~
-        mv conf/bblayers.conf~ conf/bblayers.conf
+        # Verify layer has a valid conf/layer.conf file
+        if [ -e "${append_layer}/conf/layer.conf" ]; then
+            echo "Adding layer: $append_layer"
+            awk '/  "$/ && !x {print "'"  ${append_layer}"' \\"; x=1} 1' \
+                conf/bblayers.conf > conf/bblayers.conf~
+            mv conf/bblayers.conf~ conf/bblayers.conf
+        else
+            echo "Warning: Layer '$layer' found at $append_layer but missing conf/layer.conf, skipping..."
+        fi
     else
         echo "Warning: Layer '$layer' not found, skipping..."
     fi
