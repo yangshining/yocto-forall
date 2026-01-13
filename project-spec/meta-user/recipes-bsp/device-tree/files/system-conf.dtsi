@@ -1,0 +1,110 @@
+/ {
+	chosen {
+		bootargs = " earlycon console=ttyPS0,115200 clk_ignore_unused uio_pdrv_genirq.of_id=generic-uio root=/dev/ram0 rw";
+		stdout-path = "serial0:115200n8";
+	};
+};
+
+&gem0 {
+	local-mac-address = [00 0a 35 00 57 ae];
+};
+
+&qspi {
+	#address-cells = <1>;
+	#size-cells = <0>;
+	flash0: flash@0 {
+		/delete-node/ partition@0;
+		/delete-node/ partition@100000;
+		/delete-node/ partition@600000;
+		/delete-node/ partition@620000;
+		/delete-node/ partition@c00000;
+		partition@0 {
+			label = "boot";
+			read-only;
+			reg = <0x00000000 0x00200000>;
+		};
+		partition@1 {
+			label = "bootenv";
+			reg = <0x00200000 0x00020000>;
+		};
+		partition@2 {
+			label = "bootscr";
+			reg = <0x00220000 0x00020000>;
+		};
+		partition@3 {
+			label = "boot-dev";
+			read-only;
+			reg = <0x00240000 0x00200000>;
+		};
+		partition@4 {
+			label = "bootenv-dev";
+			reg = <0x00440000 0x00020000>;
+		};
+		partition@5 {
+			label = "bootscr-dev";
+			reg = <0x00460000 0x00020000>;
+		};
+		partition@6 {
+			label = "boot-default";
+			read-only;
+			reg = <0x00480000 0x00200000>;
+		};
+		partition@7 {
+			label = "bootenv-default";
+			reg = <0x00680000 0x00020000>;
+		};
+		partition@8 {
+			label = "bootscr-default";
+			reg = <0x006a0000 0x00020000>;
+		};
+		partition@9 {
+			label = "bootenv-development";
+			reg = <0x006c0000 0x00020000>;
+		};
+		partition@10 {
+			label = "bootscr-development";
+			reg = <0x006e0000 0x00020000>;
+		};
+		partition@11 {
+			label = "reserved2";
+			reg = <0x00700000 0x002e0000>;
+		};
+		partition@12 {
+			label = "rootfs-data";
+			reg = <0x009e0000 0x00090000>;
+		};
+		partition@13 {
+			label = "user-config";
+			reg = <0x00a70000 0x00010000>;
+		};
+		partition@14 {
+			label = "boardenv";
+			reg = <0x00a80000 0x000e0000>;
+		};
+		partition@15 {
+			label = "tpmdb";
+			reg = <0x00b60000 0x00020000>;
+		};
+		partition@16 {
+			label = "agingtestswflag";
+			reg = <0x00b80000 0x00020000>;
+		};
+		partition@17 {
+			label = "agingtest";
+			reg = <0x00ba0000 0x00020000>;
+		};
+		partition@18 {
+			label = "log";
+			reg = <0x00bc0000 0x00100000>;
+		};
+		partition@19 {
+			label = "productiondb-dev";
+			reg = <0x00cc0000 0x001a0000>;
+		};
+		partition@20 {
+			label = "productiondb";
+			reg = <0x00e60000 0x001a0000>;
+		};
+	};
+};
+
