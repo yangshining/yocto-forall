@@ -74,7 +74,7 @@ if [ "$(whoami)" = "root" ]; then
     return
 fi
 
-MACHINE="zynqmp-eg-generic"
+MACHINE="zynqmp-generic"
 
 OEROOTDIR=${TOP_DIR}/components/layers/core/poky
 if [ -e ${TOP_DIR}/components/layers/core/oe-core ]; then

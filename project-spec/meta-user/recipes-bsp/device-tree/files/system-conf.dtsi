@@ -3,6 +3,9 @@
 		bootargs = " earlycon console=ttyPS0,115200 clk_ignore_unused uio_pdrv_genirq.of_id=generic-uio root=/dev/ram0 rw";
 		stdout-path = "serial0:115200n8";
 	};
+	aliases {
+		serial0 = &uart0;
+	};
 };
 
 &gem0 {
@@ -105,6 +108,9 @@
 			label = "productiondb";
 			reg = <0x00e60000 0x001a0000>;
 		};
+		partition@21 {
+			label = "reserved3";
+			reg = <0x01000000 0x03000000>;
+		};
 	};
 };
-

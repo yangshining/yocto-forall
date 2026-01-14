@@ -1,6 +1,9 @@
-/include/ "system-conf.dtsi"
-
 / {
+    gpio_keys:alarm_keys@0 {
+        compatible = "gpio-keys";
+        label = "Interrupt collection";
+    };
+
     reserved-memory {
         #address-cells = <2>;
         #size-cells = <2>;
@@ -12,43 +15,71 @@
             reg = <0x0 0x38000000 0x0 0x4000000>;
         };
 
-        // log system and RACD reserved
-        rmdom0domain: rmdom0domain@22000000 {
-            reg = <0x0 0x22000000 0x0 0xE000000>; // 224M
-            no-map;
-        };
+		rmdom0domain: rmdom0domain@22000000 {
+			reg = <0x0 0x22000000 0x0 0xE000000>; // 224MB conflict with bootscript loading at 0x20000000,shift it
+			no-map;
+		};		
     };
+	
+	rmdom0: rmdom0 {
+		#address-cells = <1>;
+		#size-cells = <1>;
+		compatible = "linux,rmdom";
+		memory-domain = <&rmdom0domain>;
+		ranges;
 
-    rmdom0: rmdom0 {
-        #address-cells = <1>;
-        #size-cells = <1>;
-        compatible = "linux,rmdom";
-        memory-domain = <&rmdom0domain>;
-        ranges;
+		logsys@1000 {
+			compatible = "linux,rmdom-rmem";
+			reg = <0x1000 0x7FFF000>; // 128M - 4K - 4K for log system //skip RMDOM header
+		};
 
-        logsys@1000 {
-            compatible = "linux,rmdom-rmem";
-            reg = <0x1000 0x7FFF000>; // 128M - 4K - 4K for log system //skip RMDOM header
-        };
+		racd@8000000 {
+			compatible = "linux,rmdom-rmem";
+			reg = <0x8000000 0x4FFF000>; // 80 MB - 4K for Retrospective Analysis Core Dump
+		};
+	};	
 
-        racd@8000000 {
-            compatible = "linux,rmdom-rmem";
-            reg = <0x8000000 0x4FFF000>; // 80 MB - 4K for Retrospective Analysis Core Dump
-        };
-
-        ramoops@5000000 { //support pstore (Persistent store support enabled in kernel)
-            compatible = "linux,rmdom-ramoops";
-            reg = <0xD000000 0x1000000>;//16MB
-            record-size = <0x10000>;
-            console-size = <0x10000>;
-            ftrace-size = <0x10000>;
-            rmsg-size = <0x10000>;
-        };
-    };
-
-    rts_mem@0x38000000 {
+    rts_mem@38000000 {
         compatible = "generic-uio";
         reg = <0x0 0x38000000 0x0 0x4000000>;
+    };
+
+/*
+    select_map: select-map {
+        compatible = "selectmap,ku5p";
+        status = "okay";
+        reg = <0x0 0xff0a0048 0x0 0x20>;
+        first_check_cfg_done = <0>;
+        ku_rdwr = <&gpio 65 GPIO_ACTIVE_HIGH>;
+        ku_cclk = <&gpio 53 GPIO_ACTIVE_HIGH>;
+        ku_prog_b = <&gpio 56 GPIO_ACTIVE_HIGH>;
+        ku_cfg_done = <&gpio 52 GPIO_ACTIVE_HIGH>;
+        ku_init_b = <&gpio 68 GPIO_ACTIVE_HIGH>;
+        ku_csi_b = <&gpio 60 GPIO_ACTIVE_HIGH>;
+        // ku_cfg_led = <&gpio 51 GPIO_ACTIVE_HIGH>;
+        ku_bank_base = <&gpio 52 GPIO_ACTIVE_HIGH>;
+        // D0 - D7
+        gpios = <&gpio 64 GPIO_ACTIVE_HIGH
+            &gpio 57 GPIO_ACTIVE_HIGH
+            &gpio 66 GPIO_ACTIVE_HIGH
+            &gpio 69 GPIO_ACTIVE_HIGH
+            &gpio 54 GPIO_ACTIVE_HIGH
+            &gpio 62 GPIO_ACTIVE_HIGH
+            &gpio 61 GPIO_ACTIVE_HIGH
+            &gpio 63 GPIO_ACTIVE_HIGH>;
+    };
+*/
+};
+
+&spi1 {
+    status = "okay";
+    num-cs = <1>;
+    tpm@0 {
+        compatible = "infineon,slb9670";
+        #address-cells = <1>;
+        #size-cells = <0>;
+        spi-max-frequency = <20000000>;
+        reg = <0>;
     };
 };
 
@@ -77,44 +108,48 @@
     };
 };
 
-&gem1 {
-    status = "disabled";
-};
-
-&gem2 {
-    status = "okay";
-    phy-mode = "gmii";
-    fixed-link {
-        speed = <1000>;
-        full-duplex;
-    };
-};
-
-&gem3 {
-    status = "okay";
-    phy-mode = "gmii";
-    fixed-link {
-        speed = <1000>;
-        full-duplex;
-    };
-};
-
-&flash0 {
-    partition@21 {
-        label = "reserved3";
-        reg = <0x01000000 0x01000000>;
-    };
-};
-
 &spi0 {
     status = "okay";
     num-cs = <1>;
     u-boot,dm-pre-reloc;
-    spidev@0 {
-        compatible="rohm,dh2228fv";
+    phc@0 {
+        compatible="idt,8a34000";
         reg = <0>;
-        spi-max-frequency = <5000000>;
+        spi-max-frequency = <10000000>;
+        reset-gpio = <&gpio 24 1>;//GPIO_ACTIVE_LOW
     };
+};
+
+&sdhci0 {
+        status = "okay";
+        bus-width = <8>;
+        non-removable;
+        cap-mmc-highspeed;
+        cap-sd-highspeed;
+        disable-wp;
+        no-1-8-v;
+};
+
+&gpio_keys {
+	/* will be enabled in overlay */
+	status = "disabled";
+};
+
+&uart1 {
+	rts-gpio = <361>;
+	linux,rs485-enabled-at-boot-time;
+	rs485-rts-delay = <0 20>;
+};
+
+&debug_bridge_0 {
+	compatible = "xlnx,xvc";
+	status = "okay";
+};
+
+&axi_intc_ku5p {
+	compatible = "xlnx,intc-interlink";
+	// will be enabled in overlay
+	status = "disabled";
 };
 
 &axi_quad_spi_0 {
@@ -160,16 +195,72 @@
         reg = <6>;
         spi-max-frequency = <5000000>;
     };
-};
-*/
-&sdhci0 {
-        status = "okay";
-        bus-width = <8>;
-        non-removable;
-        cap-mmc-highspeed;
-        cap-sd-highspeed;
-        disable-wp;
-        no-1-8-v;
+
+    spidev@7 {
+        compatible="rohm,dh2228fv";
+        reg = <7>;
+        spi-max-frequency = <5000000>;
+    };
+
+    spidev@8 {
+        compatible="rohm,dh2228fv";
+        reg = <8>;
+        spi-max-frequency = <5000000>;
+    };
+
+    spidev@9 {
+        compatible="rohm,dh2228fv";
+        reg = <9>;
+        spi-max-frequency = <5000000>;
+    };
+
+    spidev@10 {
+        compatible="rohm,dh2228fv";
+        reg = <10>;
+        spi-max-frequency = <5000000>;
+    };
+
+    spidev@11 {
+        compatible="rohm,dh2228fv";
+        reg = <11>;
+        spi-max-frequency = <5000000>;
+    };
+
+    spidev@12 {
+        compatible="rohm,dh2228fv";
+        reg = <12>;
+        spi-max-frequency = <5000000>;
+    };
+
+    spidev@13 {
+        compatible="rohm,dh2228fv";
+        reg = <13>;
+        spi-max-frequency = <5000000>;
+    };
+
+    spidev@14 {
+        compatible="rohm,dh2228fv";
+        reg = <14>;
+        spi-max-frequency = <5000000>;
+    };
+
+    spidev@15 {
+        compatible="rohm,dh2228fv";
+        reg = <15>;
+        spi-max-frequency = <5000000>;
+    };
+
+    spidev@16 {
+        compatible="rohm,dh2228fv";
+        reg = <16>;
+        spi-max-frequency = <5000000>;
+    };
+
+    spidev@17 {
+        compatible="rohm,dh2228fv";
+        reg = <17>;
+        spi-max-frequency = <5000000>;
+    };
 };
 
 &amba_pl {
@@ -183,102 +274,56 @@
         reg = <0x0 0xa4000000 0x0 0x20000>;
     };
 };
-/*
+
 &dpd_0{
     compatible = "generic-uio";
     reg = <0x0 0xa8000000 0x0 0x4000000>;
 };
-*/
 
-&gpio_keys {
-	status = "okay";
+&support_1588_2step_timer1588_subs_timer_1588_v2_0_0 {
+   compatible = "xlnx,timer-1588-2.0";
+   xlnx,period = <4000000>;
+   pps_in_fifo = <&axi_fifo_mm_s_0>;
+};
 
-    pl_irq1{
-        label = "PAP";
-        linux,code = <2>;
-        interrupt-parent = <&axi_intc_0>;
-        interrupts = <1 0>;
-        debounce-interval = <0>;
-    };
+&support_1588_2step1_timer1588_subs_timer_1588_v2_0_0 {
+   compatible = "xlnx,timer-1588-2.0";
+   xlnx,period = <4000000>;
+   status = "disabled";
+};
 
-    pl_irq4{
-        label = "AFE";
-        linux,code = <5>;
-        interrupt-parent = <&axi_intc_0>;
-        interrupts = <4 0>;
-        debounce-interval = <0>;
-    };
+&xxv_ethernet_0 {
+       axistream-connected = <&axi_mcdma_0>;
+       axistream-control-connected = <&axi_mcdma_0>;
+       axififo-connected = <&support_1588_2step_tx_ts_fifo_axi_fifo_mm_s_0>;
+       xlnx,rxtsfifo = <&support_1588_2step_rx_ts_fifo_axi_fifo_mm_s_0>;
+       xlnx,num-queues = /bits/ 16 <0x1>;
+       xlnx,channel-ids = "1";
+       xlnx,include-dre;
+       xlnx,rxmem = <0x3000>;
+       interrupt-names = "mm2s_ch1_introut", "s2mm_ch1_introut";
+       interrupt-parent = <&gic>;
+       interrupts = <0 92 4 0 94 4>;
+       local-mac-address = [00 0A 35 00 1A AE];
+};
 
-    pl_irq5{
-        label = "RTS";
-        linux,code = <6>;
-        interrupt-parent = <&axi_intc_0>;
-        interrupts = <5 0>;
-        debounce-interval = <0>;
-    };
 
-    pl_irq6{
-        label = "ORAN_IF";
-        linux,code = <7>;
-        interrupt-parent = <&axi_intc_0>;
-        interrupts = <6 1>;
-        debounce-interval = <0>;
-    };
+&xxv_ethernet_1 {
+       axistream-connected = <&axi_mcdma_0>;
+       axistream-control-connected = <&axi_mcdma_0>;
+       axififo-connected = <&support_1588_2step1_tx_ts_fifo_axi_fifo_mm_s_0>;
+       xlnx,rxtsfifo = <&support_1588_2step1_rx_ts_fifo_axi_fifo_mm_s_0>;
+       xlnx,num-queues = /bits/ 16 <0x1>;
+       xlnx,channel-ids = "2";
+       xlnx,include-dre;
+       xlnx,rxmem = <0x3000>;
+       interrupt-names = "mm2s_ch2_introut", "s2mm_ch2_introut";
+       interrupt-parent = <&gic>;
+       interrupts = <0 93 4 0 95 4>;
+       local-mac-address = [00 0A 35 00 1A AF];
+};
 
-    pl_irq7{
-        label = "AFE_OV";
-        linux,code = <8>;
-        interrupt-parent = <&axi_intc_0>;
-        interrupts = <7 0>;
-        debounce-interval = <0>;
-    };
-
-    pl_irq10{
-        label = "RADIO_CTRL_ZU67";
-        linux,code = <11>;
-        interrupt-parent = <&axi_intc_0>;
-        interrupts = <10 0>;
-        debounce-interval = <0>;
-    };
-
-    pl_irq19{
-        label = "PRACH_IP_EVENT";
-        linux,code = <20>;
-        interrupt-parent = <&axi_intc_0>;
-        interrupts = <19 0>;
-        debounce-interval = <0>;
-    };
-
-    pl_irq20{
-        label = "PRACH_CFG_UPDATE";
-        linux,code = <21>;
-        interrupt-parent = <&axi_intc_0>;
-        interrupts = <20 0>;
-        debounce-interval = <0>;
-    };
-
-    pl_irq21{
-        label = "PRACH";
-        linux,code = <22>;
-        interrupt-parent = <&axi_intc_0>;
-        interrupts = <21 0>;
-        debounce-interval = <0>;
-    };
-
-    pl_irq22{
-        label = "PRACH_OVERFLOW";
-        linux,code = <23>;
-        interrupt-parent = <&axi_intc_0>;
-        interrupts = <22 0>;
-        debounce-interval = <0>;
-    };
-
-    pl_irq25{
-        label = "UART";
-        linux,code = <26>;
-        interrupt-parent = <&axi_intc_0>;
-        interrupts = <25 0>;
-        debounce-interval = <0>;
-    };
-
+&axi_mcdma_0 {
+       compatible = "xlnx,eth-dma";
+       xlnx,include-dre;
 };
