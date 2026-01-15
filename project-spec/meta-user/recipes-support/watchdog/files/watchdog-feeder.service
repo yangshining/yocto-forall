@@ -1,0 +1,12 @@
+[Unit]
+Description=Watchdog Feeder Service
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/sbin/watchdog -F -t 60 /dev/watchdog0
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
