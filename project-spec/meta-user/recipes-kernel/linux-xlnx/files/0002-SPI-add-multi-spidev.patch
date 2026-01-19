@@ -1,0 +1,25 @@
+From bf8de9caf327025a37000d8da2fe33c63b250935 Mon Sep 17 00:00:00 2001
+From: "yang.xu" <yang.xu@zillnk.com>
+Date: Tue, 14 Jan 2025 11:22:50 +0800
+Subject: [PATCH] mu add multi spidev
+
+---
+ drivers/spi/spidev.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/spi/spidev.c b/drivers/spi/spidev.c
+index 859910ec8d9f..4bbe84e422e0 100644
+--- a/drivers/spi/spidev.c
++++ b/drivers/spi/spidev.c
+@@ -42,7 +42,7 @@
+  * particular SPI bus or device.
+  */
+ #define SPIDEV_MAJOR			153	/* assigned */
+-#define N_SPI_MINORS			32	/* ... up to 256 */
++#define N_SPI_MINORS			64	/* ... up to 256 */
+ 
+ static DECLARE_BITMAP(minors, N_SPI_MINORS);
+ 
+-- 
+2.31.1
+
