@@ -1,15 +1,15 @@
 [submodule "components/layers/core/poky"]
 	path = components/layers/core/poky
-	url = https://git.yoctoproject.org/poky
+	url = https://github.com/yoctoproject/poky
 [submodule "components/layers/core/meta-openembedded"]
 	path = components/layers/core/meta-openembedded
-	url = https://git.openembedded.org/meta-openembedded
+	url = https://github.com/openembedded/meta-openembedded
 [submodule "components/layers/core/meta-arm"]
 	path = components/layers/core/meta-arm
 	url = https://git.yoctoproject.org/meta-arm
 [submodule "components/layers/bsp/raspberrypi/meta-raspberrypi"]
 	path = components/layers/bsp/raspberrypi/meta-raspberrypi
-	url = https://git.yoctoproject.org/meta-raspberrypi
+	url = https://github.com/agherzan/meta-raspberrypi
 [submodule "components/layers/bsp/rockchip/meta-rockchip"]
 	path = components/layers/bsp/rockchip/meta-rockchip
 	url = https://github.com/JeffyCN/meta-rockchip.git
@@ -18,7 +18,7 @@
 	url = https://github.com/STMicroelectronics/meta-st-stm32mp.git
 [submodule "components/layers/bsp/nxp/meta-freescale"]
 	path = components/layers/bsp/nxp/meta-freescale
-	url = https://git.yoctoproject.org/meta-freescale
+	url = https://github.com/Freescale/meta-freescale
 [submodule "components/layers/tools/meta-clang"]
 	path = components/layers/tools/meta-clang
 	url = https://github.com/kraj/meta-clang.git
