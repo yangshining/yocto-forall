@@ -339,6 +339,10 @@ case "$MACHINE_LAYER" in
         BSP_LAYER_LIST="meta-raspberrypi"
         DISTRO="poky"
         ;;
+    meta-tegra)
+        BSP_LAYER_LIST="meta-tegra"
+        DISTRO="poky"
+        ;;
     *)
         echo "ERROR: Layer not find"
         return
