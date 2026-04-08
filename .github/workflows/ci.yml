@@ -1,0 +1,89 @@
+name: Validate
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    name: Validate [${{ matrix.machine }}]
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+
+    env:
+      LANG: en_US.UTF-8
+      LC_ALL: en_US.UTF-8
+
+    strategy:
+      fail-fast: false
+      matrix:
+        machine:
+          - zynqmp-generic
+          - ls1043ardb
+          - rk3568-evb
+          - stm32mp15-common
+          - raspberrypi4-64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        timeout-minutes: 30
+        with:
+          submodules: recursive
+          fetch-depth: 1
+
+      - name: Install Yocto host dependencies
+        shell: bash
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            gawk wget git diffstat unzip texinfo gcc build-essential \
+            chrpath socat cpio python3 python3-pip python3-pexpect \
+            xz-utils debianutils iputils-ping python3-git python3-jinja2 \
+            libegl-mesa0 libsdl2-dev python3-subunit \
+            mesa-common-dev zstd liblz4-tool file locales libacl1-dev
+
+      - name: Generate locale
+        shell: bash
+        run: |
+          sudo locale-gen en_US.UTF-8
+          sudo update-locale LANG=en_US.UTF-8
+
+      - name: Initialize build environment
+        env:
+          MATRIX_MACHINE: ${{ matrix.machine }}
+        shell: bash
+        run: |
+          . configs/setup-env.sh -m "$MATRIX_MACHINE"
+
+      - name: Verify environment initialized
+        shell: bash
+        run: |
+          test -f build/SOURCE_THIS || { echo "ERROR: SOURCE_THIS not created by setup-env.sh"; exit 1; }
+
+      - name: Verify machine selection
+        env:
+          MATRIX_MACHINE: ${{ matrix.machine }}
+        shell: bash
+        run: |
+          . build/SOURCE_THIS
+          actual=$(bitbake-getvar --value MACHINE)
+          if [ "$actual" != "$MATRIX_MACHINE" ]; then
+            echo "ERROR: MACHINE is '$actual', expected '$MATRIX_MACHINE'"
+            exit 1
+          fi
+          echo "MACHINE=$actual (ok)"
+
+      - name: Show layers
+        shell: bash
+        run: |
+          . build/SOURCE_THIS
+          bitbake-layers show-layers
+
+      - name: Parse recipes
+        shell: bash
+        run: |
+          . build/SOURCE_THIS
+          bitbake -p
