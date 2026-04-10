@@ -1,3 +1,4 @@
 # STM32MP-specific BitBake settings
 PREFERRED_PROVIDER_virtual/kernel = "linux-stm32mp"
+PREFERRED_PROVIDER_virtual/bootloader = "u-boot-stm32mp"
 PREFERRED_PROVIDER_u-boot = "u-boot-stm32mp"

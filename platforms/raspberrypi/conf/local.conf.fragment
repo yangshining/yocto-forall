@@ -1,7 +1,6 @@
 # Raspberry Pi-specific BitBake settings
 PREFERRED_PROVIDER_virtual/kernel = "linux-raspberrypi"
 PREFERRED_PROVIDER_virtual/bootloader = "u-boot"
-PREFERRED_PROVIDER_u-boot = "u-boot"
 
 # Enable U-Boot
 RPI_USE_U_BOOT = "1"
