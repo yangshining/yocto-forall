@@ -1,3 +1,6 @@
+# Override layer series compatibility (meta-freescale declares whinlatter, we run scarthgap)
+LAYERSERIES_COMPAT_freescale-layer = "scarthgap whinlatter"
+
 # NXP QorIQ-specific BitBake settings
 ACCEPT_FSL_EULA = "1"
 

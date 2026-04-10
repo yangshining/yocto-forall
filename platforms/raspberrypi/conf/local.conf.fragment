@@ -1,3 +1,6 @@
+# Override layer series compatibility (meta-raspberrypi declares whinlatter, we run scarthgap)
+LAYERSERIES_COMPAT_raspberrypi = "scarthgap whinlatter"
+
 # Raspberry Pi-specific BitBake settings
 PREFERRED_PROVIDER_virtual/kernel = "linux-raspberrypi"
 PREFERRED_PROVIDER_virtual/bootloader = "u-boot"
