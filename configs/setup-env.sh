@@ -129,7 +129,7 @@ You can now run 'bitbake <target>' to build images, for example:
 
 clean_up() {
     unset PROGNAME TOP_DIR OEROOTDIR PROJECT_DIR \
-         EULA EULA_FILE LAYER_LIST MACHINE MACHINE_LAYER FSLDISTRO EXTRAROOTDIR \
+         LAYER_LIST MACHINE MACHINE_LAYER FSLDISTRO EXTRAROOTDIR \
          OLD_OPTIND CPUS JOBS THREADS DOWNLOADS CACHES DISTRO \
          PLATFORM_DIR PLATFORM_MACHINE_LAYER PLATFORM_BSP_LAYERS PLATFORM_DISTRO \
          setup_flag setup_h setup_j setup_t setup_g setup_l setup_builddir \
@@ -325,9 +325,6 @@ DISTRO="$PLATFORM_DISTRO"
 
 # Combine all layers
 LAYER_LIST="$BASE_LAYER_LIST $BSP_LAYER_LIST"
-
-# EULA acceptance is handled per-platform via local.conf.fragment
-EULA_FILE=""
 
 # set default jobs and threads
 CPUS=`grep -c processor /proc/cpuinfo`
