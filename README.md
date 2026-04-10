@@ -51,22 +51,29 @@ bitbake core-image-minimal        # other platforms
 
 ```
 components/
-  layers/core/        # poky, meta-openembedded, meta-arm
-  layers/bsp/         # Vendor BSP layers (git submodules)
-  layers/tools/       # meta-clang, meta-qt5
-  descriptions/       # Xilinx XSA hardware definition files
+  layers/core/                  # poky, meta-openembedded, meta-arm
+  layers/bsp/                   # Vendor BSP layers (git submodules)
+  layers/tools/                 # meta-clang, meta-qt5
+  descriptions/                 # Xilinx XSA hardware definition files
 configs/
-  setup-env.sh        # Main environment init script
-  local-proj.conf     # Project-wide BitBake configuration
-project-spec/
-  meta-user/          # Project customization layer (priority 5)
-    recipes-bsp/      # Device tree, U-Boot, firmware overrides
-    recipes-kernel/   # Kernel patches
-    recipes-support/  # systemd services (watchdog, low-level-init)
-docs/                 # Platform guides and troubleshooting
+  setup-env.sh                  # Main environment init script
+  local-proj.conf               # Project-wide BitBake configuration
+platforms/
+  common/meta-user/             # Shared customizations (priority 5): watchdog service, IMAGE_INSTALL
+  xilinx/
+    platform.conf               # Declares machine layer, BSP layers, distro
+    conf/local.conf.fragment    # Xilinx-specific BitBake settings
+    meta-xilinx-user/           # Xilinx recipes: device tree, U-Boot, FSBL, kernel patches
+  nxp/ rockchip/ stm32mp/ raspberrypi/ nvidia/
+    platform.conf               # Same per-platform structure
+    conf/local.conf.fragment
+    meta-<name>-user/           # Platform-specific recipes
+docs/                           # Platform guides and troubleshooting
 ```
 
-All project customizations go into `project-spec/meta-user/`. Upstream submodule layers are never modified directly.
+Project customizations live in `platforms/<name>/meta-<name>-user/` (platform-specific, priority 6) or `platforms/common/meta-user/` (shared across platforms, priority 5). Upstream submodule layers are never modified directly.
+
+To add support for a new SoC: add a BSP submodule, create a `platforms/<name>/` directory with `platform.conf`, `conf/local.conf.fragment`, and a `meta-<name>-user/` layer. No changes to `setup-env.sh` are needed.
 
 ## setup-env.sh Options
 
