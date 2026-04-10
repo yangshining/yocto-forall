@@ -414,17 +414,6 @@ for layer in $(eval echo $LAYER_LIST); do
     fi
 done
 
-# add all meta-* layers under project-spec to bblayers.conf
-for layer_dir in "${TOP_DIR}"/project-spec/meta-*; do
-    if [ -d "$layer_dir" ]; then
-        append_layer="$(readlink -f "$layer_dir")"
-        echo "Adding layer: $append_layer"
-        awk '/  "$/ && !x {print "'"  ${append_layer}"' \\"; x=1} 1' \
-            conf/bblayers.conf > conf/bblayers.conf~
-        mv conf/bblayers.conf~ conf/bblayers.conf
-    fi
-done
-
 # Add platform-specific and common meta-* layers
 for layer_dir in "${PLATFORM_DIR}"/meta-* "${TOP_DIR}/platforms/common"/meta-*; do
     if [ -d "$layer_dir" ] && [ -e "${layer_dir}/conf/layer.conf" ]; then
