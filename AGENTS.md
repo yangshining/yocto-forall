@@ -29,7 +29,7 @@ This repository is a Yocto-based multi-BSP build workspace.
   ```
 - Return to an existing build env:
   ```bash
-  . build/SOURCE_THIS
+  . build-<machine>/SOURCE_THIS
   ```
 
 ## Coding Style & Naming Conventions
@@ -37,14 +37,14 @@ This repository is a Yocto-based multi-BSP build workspace.
 - BitBake metadata follows existing naming patterns:
   - Append files: `<recipe>_%.bbappend`
   - Patches: numeric prefix + short subject (for example `0001-fix-...patch`)
-- Keep machine-specific settings in `configs/*.conf` or `project-spec/meta-user/conf/`; avoid editing upstream submodule layers directly.
+- Keep machine-specific settings in `configs/*.conf` or `platforms/<name>/meta-<name>-user/`; avoid editing upstream submodule layers directly.
 
 ## Testing Guidelines
 There is no standalone top-level unit test suite in this repo. Validate changes with targeted BitBake builds:
 
 - Recipe-level check: `bitbake <recipe>`
 - Image-level smoke build: `bitbake <image>`
-- For boot-impacting changes, verify artifacts under `build/tmp/deploy/images/<machine>/`.
+- For boot-impacting changes, verify artifacts under `build-<machine>/tmp/deploy/images/<machine>/`.
 
 ## Commit & Pull Request Guidelines
 Current history is minimal (`add xlinx linux support`) and uses short, imperative summaries. Continue with concise, scope-first messages, for example:

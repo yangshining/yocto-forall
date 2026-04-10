@@ -16,7 +16,7 @@ git submodule update --init --recursive
 . configs/setup-env.sh -m zynqmp-generic
 
 # Re-enter an existing build env (after shell restart)
-. build/SOURCE_THIS
+. build-<machine>/SOURCE_THIS
 
 # Build full image
 bitbake petalinux-image-minimal    # Xilinx default
@@ -104,4 +104,4 @@ No unit test suite. Validate with BitBake builds:
 - Parse only (fast): `bitbake -p`
 - Recipe level: `bitbake <recipe>`
 - Image level: `bitbake <image>`
-- Boot artifacts: check `build/tmp/deploy/images/<machine>/` after a full build.
+- Boot artifacts: check `build-<machine>/tmp/deploy/images/<machine>/` after a full build.

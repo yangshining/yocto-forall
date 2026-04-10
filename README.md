@@ -44,7 +44,7 @@ bitbake core-image-minimal        # other platforms
 
 **Re-enter an existing build environment** (after shell restart):
 ```bash
-. build/SOURCE_THIS
+. build-<machine>/SOURCE_THIS
 ```
 
 ## Repository Structure
@@ -82,7 +82,7 @@ To add support for a new SoC: add a BSP submodule, create a `platforms/<name>/` 
 | `-m <machine>` | Target machine (required) |
 | `-j <n>` | `PARALLEL_MAKE` jobs (default: CPU count) |
 | `-t <n>` | `BB_NUMBER_THREADS` (default: CPU count) |
-| `-b <path>` | Build directory (default: `build/`) |
+| `-b <path>` | Build directory (default: `build-<machine>/`) |
 | `-d <path>` | Download cache directory |
 | `-c <path>` | sstate cache directory |
 

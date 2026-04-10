@@ -80,7 +80,7 @@ OEROOTDIR=${TOP_DIR}/components/layers/core/poky
 if [ -e ${TOP_DIR}/components/layers/core/oe-core ]; then
     OEROOTDIR=${TOP_DIR}/components/layers/core/oe-core
 fi
-PROJECT_DIR=${TOP_DIR}/build
+PROJECT_DIR=${TOP_DIR}/build-${MACHINE}
 
 prompt_message() {
     local i=''
@@ -322,7 +322,7 @@ if [ -n "$setup_builddir" ]; then
         PROJECT_DIR="`pwd`/${setup_builddir}"
     fi
 else
-    PROJECT_DIR=${TOP_DIR}/build
+    PROJECT_DIR=${TOP_DIR}/build-${MACHINE}
 fi
 mkdir -p $PROJECT_DIR
 

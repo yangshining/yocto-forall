@@ -62,16 +62,18 @@ jobs:
           . configs/setup-env.sh -m "$MATRIX_MACHINE"
 
       - name: Verify environment initialized
+        env:
+          MATRIX_MACHINE: ${{ matrix.machine }}
         shell: bash
         run: |
-          test -f build/SOURCE_THIS || { echo "ERROR: SOURCE_THIS not created by setup-env.sh"; exit 1; }
+          test -f "build-${MATRIX_MACHINE}/SOURCE_THIS" || { echo "ERROR: SOURCE_THIS not created by setup-env.sh"; exit 1; }
 
       - name: Verify machine selection
         env:
           MATRIX_MACHINE: ${{ matrix.machine }}
         shell: bash
         run: |
-          . build/SOURCE_THIS
+          . "build-${MATRIX_MACHINE}/SOURCE_THIS"
           actual=$(bitbake-getvar --value MACHINE)
           if [ "$actual" != "$MATRIX_MACHINE" ]; then
             echo "ERROR: MACHINE is '$actual', expected '$MATRIX_MACHINE'"
@@ -80,13 +82,17 @@ jobs:
           echo "MACHINE=$actual (ok)"
 
       - name: Show layers
+        env:
+          MATRIX_MACHINE: ${{ matrix.machine }}
         shell: bash
         run: |
-          . build/SOURCE_THIS
+          . "build-${MATRIX_MACHINE}/SOURCE_THIS"
           bitbake-layers show-layers
 
       - name: Parse recipes
+        env:
+          MATRIX_MACHINE: ${{ matrix.machine }}
         shell: bash
         run: |
-          . build/SOURCE_THIS
+          . "build-${MATRIX_MACHINE}/SOURCE_THIS"
           bitbake -p

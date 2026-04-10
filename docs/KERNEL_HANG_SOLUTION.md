@@ -183,7 +183,7 @@ bitbake device-tree
 bitbake petalinux-image-minimal
 
 # New DTB location
-ls -lh build/tmp/deploy/images/zynqmp-eg-generic/system.dtb
+ls -lh build-zynqmp-eg-generic/tmp/deploy/images/zynqmp-eg-generic/system.dtb
 ```
 
 ---
@@ -252,7 +252,7 @@ After applying Solution 1 and rebuilding:
 
 1. **Check device tree:**
    ```bash
-   dtc -I dtb -O dts build/tmp/deploy/images/zynqmp-eg-generic/system.dtb | grep "status.*disabled"
+   dtc -I dtb -O dts build-zynqmp-eg-generic/tmp/deploy/images/zynqmp-eg-generic/system.dtb | grep "status.*disabled"
    ```
 
 2. **Boot and check dmesg:**
