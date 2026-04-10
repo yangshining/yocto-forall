@@ -142,45 +142,20 @@ usage() {
     echo "Usage: . $PROGNAME -m <machine> [options]"
 
     echo -e "\n    Supported machines:"
-    echo "    Freescale/NXP machines:"
-    find ${TOP_DIR}/components/layers/bsp/nxp/meta-freescale/conf/machine \
-        -name "*.conf" 2>/dev/null | \
-        sed 's,.*/,,g;s,.conf,,g' | sort | \
-        while read machine; do
-            echo "      $machine"
-        done
-    
-    echo "    Rockchip machines:"
-    find ${TOP_DIR}/components/layers/bsp/meta-rockchip/conf/machine \
-        -name "*.conf" 2>/dev/null | \
-        sed 's,.*/,,g;s,.conf,,g' | sort | \
-        while read machine; do
-            echo "      $machine"
-        done
-    
-    echo "    Xilinx machines:"
-    find ${TOP_DIR}/components/layers/bsp/meta-xilinx/conf/machine \
-        -name "*.conf" 2>/dev/null | \
-        sed 's,.*/,,g;s,.conf,,g' | sort | \
-        while read machine; do
-            echo "      $machine"
-        done
-
-    echo "    STM32MP machines:"
-    find ${TOP_DIR}/components/layers/bsp/stm32mp/meta-st-stm32mp/conf/machine \
-        -name "*.conf" 2>/dev/null | \
-        sed 's,.*/,,g;s,.conf,,g' | sort | \
-        while read machine; do
-            echo "      $machine"
-        done
-
-    echo "    Raspberrypi machines:"
-    find ${TOP_DIR}/components/layers/bsp/raspberrypi/meta-raspberrypi/conf/machine \
-        -name "*.conf" 2>/dev/null | \
-        sed 's,.*/,,g;s,.conf,,g' | sort | \
-        while read machine; do
-            echo "      $machine"
-        done
+    for pconf in ${TOP_DIR}/platforms/*/platform.conf; do
+        [ -f "$pconf" ] || continue
+        unset PLATFORM_MACHINE_LAYER PLATFORM_BSP_LAYERS PLATFORM_DISTRO
+        . "$pconf"
+        platform_name="$(basename $(dirname $pconf))"
+        echo "    ${platform_name} machines:"
+        find ${TOP_DIR}/components/layers/bsp -name "*.conf" 2>/dev/null | \
+            while read conf; do
+                layer=$(echo "$conf" | sed 's,.*/components/layers/bsp/[^/]*/meta-\([^/]*\)/.*,meta-\1,')
+                if [ "$layer" = "$PLATFORM_MACHINE_LAYER" ]; then
+                    echo "$conf" | sed 's,.*/,,g;s,.conf,,g'
+                fi
+            done | sort | while read m; do echo "      $m"; done
+    done
 
     echo -e "\n    Optional parameters:
     * [-m machine]: the target machine to be built (required).
@@ -192,15 +167,15 @@ usage() {
     * [-h]:         help
 "
     echo "    Examples:"
-    echo "      . $PROGNAME -m ls1043ardb"
+    echo "      . $PROGNAME -m zynqmp-generic"
     echo "      . $PROGNAME -m rk3568-evb -j 8 -t 4"
-    echo "      . $PROGNAME -m zynqmp-zcu102 -b /path/to/build"
-    
+    echo "      . $PROGNAME -m ls1043ardb -b /path/to/build"
+
     if [ "`readlink $SHELL`" = "dash" ];then
         echo "
     You are using dash which does not pass args when being sourced.
     To workaround this limitation, use \"set -- args\" prior to
-    sourcing this script. For exmaple:
+    sourcing this script. For example:
         \$ set -- -m ls1088ardb -j 3 -t 2
         \$ . $TOP_DIR/configs/$PROGNAME
 "
