@@ -129,9 +129,10 @@ You can now run 'bitbake <target>' to build images, for example:
 }
 
 clean_up() {
-    unset PROGNAME TOP_DIR OEROOTDIR FSLROOTDIR PROJECT_DIR \
+    unset PROGNAME TOP_DIR OEROOTDIR PROJECT_DIR \
          EULA EULA_FILE LAYER_LIST MACHINE MACHINE_LAYER FSLDISTRO EXTRAROOTDIR \
          OLD_OPTIND CPUS JOBS THREADS DOWNLOADS CACHES DISTRO \
+         PLATFORM_DIR PLATFORM_MACHINE_LAYER PLATFORM_BSP_LAYERS PLATFORM_DISTRO \
          setup_flag setup_h setup_j setup_t setup_g setup_l setup_builddir \
          setup_download setup_sstate setup_error layer append_layer \
          valid_machine valid_num BASE_LAYER_LIST BSP_LAYER_LIST CACHE_MIRROR
@@ -267,6 +268,25 @@ if [ -n "${MACHINE}" ];then
             -name ${MACHINE}.conf 2>/dev/null | head -1 | \
             sed 's,.*/components/layers/bsp/\([^/]*\)/meta-\([^/]*\)/.*,meta-\2,'`
         echo "Found machine '$MACHINE' in layer: $MACHINE_LAYER"
+
+        # Discover which platform handles this MACHINE_LAYER
+        PLATFORM_DIR=""
+        for pconf in ${TOP_DIR}/platforms/*/platform.conf; do
+            [ -f "$pconf" ] || continue
+            unset PLATFORM_MACHINE_LAYER PLATFORM_BSP_LAYERS PLATFORM_DISTRO
+            . "$pconf"
+            if [ "$PLATFORM_MACHINE_LAYER" = "$MACHINE_LAYER" ]; then
+                PLATFORM_DIR="$(dirname $pconf)"
+                break
+            fi
+        done
+
+        if [ -z "$PLATFORM_DIR" ]; then
+            echo "ERROR: No platform config found for layer '$MACHINE_LAYER'"
+            echo "Create platforms/<name>/platform.conf with PLATFORM_MACHINE_LAYER=\"$MACHINE_LAYER\""
+            clean_up && return
+        fi
+        echo "Using platform: $(basename $PLATFORM_DIR)"
         valid_machine=true
     fi
 else
@@ -299,68 +319,16 @@ BASE_LAYER_LIST=" \
     meta-arm/meta-arm-bsp \
 "
 
-# Define BSP layer list based on machine type
-BSP_LAYER_LIST=""
-case "$MACHINE_LAYER" in
-    meta-freescale)
-        BSP_LAYER_LIST="meta-freescale meta-virtualization meta-cloud-services meta-security"
-        # Add additional layers for QorIQ machines like ls1043ardb
-        if expr "$MACHINE" : "ls.*" > /dev/null || expr "$MACHINE" : "t.*" > /dev/null || expr "$MACHINE" : "p.*" > /dev/null || expr "$MACHINE" : "lx.*" > /dev/null; then
-            BSP_LAYER_LIST="$BSP_LAYER_LIST meta-qoriq meta-freescale-distro"
-        fi
-        DISTRO="fsl-qoriq"
-        ;;
-    meta-rockchip)
-        BSP_LAYER_LIST="meta-rockchip"
-        DISTRO="poky"
-        ;;
-    meta-xilinx)
-        BSP_LAYER_LIST=" \
-            meta-xilinx-tools \
-            meta-petalinux \
-            meta-tpm \
-            meta-microblaze \
-            meta-xilinx-bsp \
-            meta-xilinx-core \
-            meta-xilinx-contrib \
-            meta-xilinx-standalone \
-            meta-qt5 \
-            meta-virtualization \
-            meta-openamp \
-            meta-xilinx-tsn \
-            "
-        DISTRO="petalinux"
-        ;;
-    meta-st-stm32mp)
-        BSP_LAYER_LIST="meta-st-stm32mp"
-        DISTRO="poky"
-        ;;
-    meta-raspberrypi)
-        BSP_LAYER_LIST="meta-raspberrypi"
-        DISTRO="poky"
-        ;;
-    meta-tegra)
-        BSP_LAYER_LIST="meta-tegra"
-        DISTRO="poky"
-        ;;
-    *)
-        echo "ERROR: Layer not find"
-        return
-        ;;
-esac
+# Load platform configuration (BSP layers and DISTRO)
+. "${PLATFORM_DIR}/platform.conf"
+BSP_LAYER_LIST="$PLATFORM_BSP_LAYERS"
+DISTRO="$PLATFORM_DISTRO"
 
 # Combine all layers
 LAYER_LIST="$BASE_LAYER_LIST $BSP_LAYER_LIST"
 
-# Set EULA file based on BSP layer
-case "$MACHINE_LAYER" in
-    meta-freescale)
-        EULA_FILE="$FSLROOTDIR/EULA"
-        ;;
-    *)
-        EULA_FILE=""
-        ;;
-esac
+# EULA acceptance is handled per-platform via local.conf.fragment
+EULA_FILE=""
 
 # set default jobs and threads
 CPUS=`grep -c processor /proc/cpuinfo`
