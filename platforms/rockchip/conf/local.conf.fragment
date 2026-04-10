@@ -1,0 +1,2 @@
+# Rockchip-specific BitBake settings
+PREFERRED_PROVIDER_virtual/kernel = "linux-rockchip"

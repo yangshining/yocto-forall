@@ -1,0 +1,33 @@
+# Xilinx-specific BitBake settings
+
+# Kernel and device tree providers
+PREFERRED_PROVIDER_virtual/kernel = "linux-xlnx"
+PREFERRED_PROVIDER_virtual/dtb = "device-tree"
+EXTRA_IMAGEDEPENDS += "device-tree"
+
+# License acceptance
+LICENSE_FLAGS_ACCEPTED = "xilinx"
+
+# Use XSCT tarball for Xilinx tools
+USE_XSCT_TARBALL = "1"
+
+# Enable Xilinx ESW tools for XSA-based device tree generation
+XILINX_WITH_ESW = "xsct"
+
+# XSA hardware definition file path
+HDF_MACHINE = "${MACHINE}"
+HDF_BASE = "file://"
+HDF_PATH = "${TOPDIR}/../components/descriptions/system.xsa"
+
+# Retain work directories for key Xilinx artifacts (needed for boot artifact access)
+RM_WORK_EXCLUDE += " \
+    device-tree \
+    petalinux-image-minimal \
+    fsbl-firmware \
+    u-boot-xlnx \
+    u-boot-zynq-scr \
+    arm-trusted-firmware \
+    "
+
+# Install Xilinx-specific init service
+IMAGE_INSTALL:append = " low-level-init"

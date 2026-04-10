@@ -1,0 +1,17 @@
+# Raspberry Pi-specific BitBake settings
+PREFERRED_PROVIDER_virtual/kernel = "linux-raspberrypi"
+PREFERRED_PROVIDER_virtual/bootloader = "u-boot"
+PREFERRED_PROVIDER_u-boot = "u-boot"
+
+# Enable U-Boot
+RPI_USE_U_BOOT = "1"
+
+# Hardware interface enables
+ENABLE_I2C = "1"
+ENABLE_SPI = "1"
+ENABLE_CAMERA = "1"
+ENABLE_UART = "1"
+
+# U-Boot environment
+UBOOT_ENV_SIZE = "0x20000"
+UBOOT_ENV_OFFSET = "0x100000"
