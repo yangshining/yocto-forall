@@ -354,6 +354,8 @@ CACHES=`readlink -f "$CACHES"`
 if [ -e "$PROJECT_DIR/SOURCE_THIS" ]; then
     echo "$PROJECT_DIR was created before."
     . $PROJECT_DIR/SOURCE_THIS
+    mkdir -p "${TOP_DIR}/images"
+    ln -sfn "${PROJECT_DIR}/tmp/deploy/images/${MACHINE}" "${TOP_DIR}/images/${MACHINE}"
     echo "Nothing is changed."
     clean_up && return
 fi
@@ -483,6 +485,9 @@ if [ ! -e SOURCE_THIS ]; then
     echo ". ./oe-init-build-env > /dev/null" >> SOURCE_THIS
     echo "echo \"Back to build project $PROJECT_DIR.\"" >> SOURCE_THIS
 fi
+
+mkdir -p "${TOP_DIR}/images"
+ln -sfn "${PROJECT_DIR}/tmp/deploy/images/${MACHINE}" "${TOP_DIR}/images/${MACHINE}"
 
 prompt_com_message
 # cd $PROJECT_DIR
