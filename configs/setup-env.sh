@@ -80,7 +80,6 @@ OEROOTDIR=${TOP_DIR}/components/layers/core/poky
 if [ -e ${TOP_DIR}/components/layers/core/oe-core ]; then
     OEROOTDIR=${TOP_DIR}/components/layers/core/oe-core
 fi
-FSLROOTDIR=${TOP_DIR}/components/layers/bsp/nxp/meta-freescale
 PROJECT_DIR=${TOP_DIR}/build
 
 prompt_message() {
@@ -454,6 +453,17 @@ for layer_dir in "${TOP_DIR}"/project-spec/meta-*; do
     fi
 done
 
+# Add platform-specific and common meta-* layers
+for layer_dir in "${PLATFORM_DIR}"/meta-* "${TOP_DIR}/platforms/common"/meta-*; do
+    if [ -d "$layer_dir" ] && [ -e "${layer_dir}/conf/layer.conf" ]; then
+        append_layer="$(readlink -f "$layer_dir")"
+        echo "Adding layer: $append_layer"
+        awk '/  "$/ && !x {print "'"  ${append_layer}"' \\"; x=1} 1' \
+            conf/bblayers.conf > conf/bblayers.conf~
+        mv conf/bblayers.conf~ conf/bblayers.conf
+    fi
+done
+
 cat >> conf/local.conf <<-EOF
 
 # Parallelism Options
@@ -464,124 +474,28 @@ SSTATE_DIR = "$CACHES"
 
 EOF
 
-# Add machine-specific configurations
-case "$MACHINE_LAYER" in
-    meta-freescale)
-        # Freescale/NXP specific configurations
-        if expr "$MACHINE" : lx216;then
-           cat >>conf/local.conf <<-EOF
+# Load platform-specific local.conf settings
+if [ -e "${PLATFORM_DIR}/conf/local.conf.fragment" ]; then
+    cat "${PLATFORM_DIR}/conf/local.conf.fragment" >> conf/local.conf
+fi
 
-# Specify DISTRO_FEATURES to select Chain of Trust(COT) for Trusted Board Boot
-# feature in ATF. Two options:
-# 1. secure: generate COT by cst from NXP
-# 2. arm-cot: generate COT by cert_create from ATF
-# uncomment below line to choose one:
-#DISTRO_FEATURES:append = " secure"
+# Apply cache mirror settings if configured (applies to all platforms)
+if [ -n "$CACHE_MIRROR" ]; then
+    cat >> conf/local.conf <<-EOF
 
-EOF
-        fi
-
-        if [ "$MACHINE" = "ls1028ardb" ]; then
-           cat >>conf/local.conf <<-EOF
-PREFERRED_VERSION_weston = "10.0.1.imx"
-PREFERRED_VERSION_wayland-protocols = "1.25.imx"
-PREFERRED_VERSION_libdrm = "2.4.109.imx"
-PREFERRED_PROVIDER_virtual/libgl  = "imx-gpu-viv"
-PREFERRED_PROVIDER_virtual/libgles1 = "imx-gpu-viv"
-PREFERRED_PROVIDER_virtual/libgles2 = "imx-gpu-viv"
-PREFERRED_PROVIDER_virtual/egl      = "imx-gpu-viv"
-
-# Some gstream plugins require "commercial" be set in LICENSE_FLAGS_ACCEPTED
-# For exmaple, gstreamer1.0-plugins-ugly-asf/gstreamer1.0-libav
-# uncomment the below one line to include them into fsl-image-multimedia-full
-LICENSE_FLAGS_ACCEPTED:append = " commercial"
-
-EOF
-        fi
-
-        # Add mirror configuration for Freescale machines if needed
-        if [ -n "$CACHE_MIRROR" ]; then
-           cat >>conf/local.conf <<-EOF
-
-#Add Pre-mirrors
+# Pre-mirrors
 PREMIRRORS:prepend = "\
 git://.*/.* file://$CACHE_MIRROR/downloads/ \
 ftp://.*/.* file://$CACHE_MIRROR/downloads/ \
 http://.*/.* file://$CACHE_MIRROR/downloads/ \
 https://.*/.* file://$CACHE_MIRROR/downloads/"
 
-#State mirror settings
+# State mirror
 SSTATE_MIRRORS = " \
 file://.* file://$CACHE_MIRROR/sstate-cache/PATH"
 
 EOF
-        fi
-        ;;
-    meta-rockchip)
-        # Rockchip specific configurations
-        cat >>conf/local.conf <<-EOF
-
-# Rockchip specific settings
-PREFERRED_PROVIDER_virtual/kernel = "linux-rockchip"
-
-EOF
-        ;;
-    meta-xilinx)
-        # Xilinx specific configurations
-        cat >>conf/local.conf <<-EOF
-
-# Xilinx specific settings
-PREFERRED_PROVIDER_virtual/kernel = "linux-xlnx"
-LICENSE_FLAGS_ACCEPTED = "xilinx"
-
-USE_XSCT_TARBALL = "1"
-
-EOF
-        ;;
-    meta-st-stm32mp)
-        # ST STM32MP specific configurations
-        cat >>conf/local.conf <<-EOF
-
-# STM32MP specific settings
-PREFERRED_PROVIDER_virtual/kernel = "linux-stm32mp"
-PREFERRED_PROVIDER_u-boot = "u-boot-stm32mp"
-
-EOF
-        ;;
-    meta-raspberrypi)
-        # Raspberrypi specific configurations
-        cat >>conf/local.conf <<-EOF
-
-# Raspberrypi specific settings
-PREFERRED_PROVIDER_virtual/kernel = "linux-raspberrypi"
-PREFERRED_PROVIDER_virtual/bootloader = "u-boot"
-PREFERRED_PROVIDER_u-boot = "u-boot"
-
-# Enable U-Boot for Raspberry Pi
-RPI_USE_U_BOOT = "1"
-
-# U-Boot specific configurations
-# Note: UBOOT_MACHINE and UBOOT_ARCH will be set by machine config
-# For 64-bit RPi: UBOOT_MACHINE = "rpi_arm64_config", KERNEL_BOOTCMD = "booti", KERNEL_IMAGETYPE_UBOOT = "Image"
-# For 32-bit RPi: UBOOT_MACHINE = "rpi_config", KERNEL_BOOTCMD = "bootm", KERNEL_IMAGETYPE_UBOOT = "uImage"
-
-# Enable I2C and SPI by default
-ENABLE_I2C = "1"
-ENABLE_SPI = "1"
-
-# Enable camera interface
-ENABLE_CAMERA = "1"
-
-# Enable UART
-ENABLE_UART = "1"
-
-# U-Boot environment configuration
-UBOOT_ENV_SIZE = "0x20000"
-UBOOT_ENV_OFFSET = "0x100000"
-
-EOF
-        ;;
-esac
+fi
 
 for s in $HOME/.oe $HOME/.yocto; do
     if [ -e $s/site.conf ]; then
@@ -593,39 +507,6 @@ done
 if echo "$MACHINE" |egrep -q "^(b4|p5|t1|t2|t4)"; then
     # disable prelink (for multilib scenario) for now
     sed -i s/image-mklibs.image-prelink/image-mklibs/g conf/local.conf
-fi
-
-# Handle EULA setting (only for Freescale/NXP)
-if [ "$MACHINE_LAYER" = "meta-freescale" ] && [ -n "$EULA_FILE" ]; then
-    if [ -z "$EULA" ] && ! grep -q '^ACCEPT_FSL_EULA\s*=' conf/local.conf; then
-        EULA='ask'
-    fi
-
-    if [ "$EULA" = "ask" ]; then
-        cat <<EOF
-
-Proprietary and third party software is subject to agreement and compliance
-with, Freescale's End User License Agreement. To have the right to use these
-binaries in your images, you must read and accept the following terms.  If
-there are conflicting terms embedded in the software, the terms embedded in
-the Software will control.
-
-In all cases,  open source software is licensed under the terms of the
-applicable open source license(s), such as the BSD License, Apache License or
-the GNU Lesser General Public License.  Your use of the open source software
-is subject to the terms of each applicable license.  You must agree to the
-terms of each applicable license, or you cannot use the open source software.
-
-EOF
-        # Auto accept EULA for simple setup
-        EULA="1"
-    fi
-
-    if grep -q '^ACCEPT_FSL_EULA\s*=' conf/local.conf; then
-        sed -i "s/^#*ACCEPT_FSL_EULA\s*=.*/ACCEPT_FSL_EULA = \"$EULA\"/g" conf/local.conf
-    else
-        echo "ACCEPT_FSL_EULA = \"$EULA\"" >> conf/local.conf
-    fi
 fi
 
 # add local-proj.conf for boot-up
