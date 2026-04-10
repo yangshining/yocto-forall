@@ -36,8 +36,9 @@ bitbake -p
 GitHub Actions runs `bitbake -p` (parse-only) on every PR and push to `main` across 5 platforms. See `.github/workflows/ci.yml`. Tegra is excluded from CI until locally verified.
 
 Known pre-existing CI warnings (do not fail the job):
-- NXP (`meta-freescale`), Rockchip (`meta-rockchip`), and Raspberry Pi (`meta-raspberrypi`) BSP layers declare `whinlatter` series compatibility, not `scarthgap` — upstream issue, not caused by this repo.
-- `rk3568-evb` and `stm32mp15-common` are project-level wrapper machine names with no corresponding `.conf` files in their BSP layers — also pre-existing.
+- `rk3568-evb` and `stm32mp15-common` are project-level wrapper machine names with no corresponding `.conf` files in their BSP layers — pre-existing upstream issue.
+
+Note: NXP, Rockchip, and Raspberry Pi BSP layers previously caused `LAYERSERIES_COMPAT` errors (layers declared `whinlatter`, core requires `scarthgap`). Fixed via `LAYERSERIES_COMPAT_*` overrides in each platform's `conf/local.conf.fragment`.
 
 ## Architecture
 
