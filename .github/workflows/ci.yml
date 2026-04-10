@@ -19,12 +19,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        # Keep this list in sync with platforms/ directory.
+        # Each entry must have a corresponding platforms/<name>/platform.conf.
         machine:
           - zynqmp-generic
           - ls1043ardb
           - rk3568-evb
           - stm32mp15-common
           - raspberrypi4-64
+          # tegra210-generic  # enable after local parse-only validation passes
 
     steps:
       - name: Checkout
