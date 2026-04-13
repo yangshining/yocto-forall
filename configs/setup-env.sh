@@ -354,9 +354,18 @@ CACHES=`readlink -f "$CACHES"`
 if [ -e "$PROJECT_DIR/SOURCE_THIS" ]; then
     echo "$PROJECT_DIR was created before."
     . $PROJECT_DIR/SOURCE_THIS
+    [ -L "${TOP_DIR}/images" ] && rm "${TOP_DIR}/images"
     mkdir -p "${TOP_DIR}/images"
     ln -sfn "${PROJECT_DIR}/tmp/deploy/images/${MACHINE}" "${TOP_DIR}/images/${MACHINE}"
+    # Re-apply platform fragment (idempotent: strip old section, then re-append)
+    if [ -e "${PLATFORM_DIR}/conf/local.conf.fragment" ]; then
+        sed -i '/# PLATFORM_FRAGMENT_BEGIN/,/# PLATFORM_FRAGMENT_END/d' conf/local.conf
+        printf '\n# PLATFORM_FRAGMENT_BEGIN\n' >> conf/local.conf
+        cat "${PLATFORM_DIR}/conf/local.conf.fragment" >> conf/local.conf
+        printf '# PLATFORM_FRAGMENT_END\n' >> conf/local.conf
+    fi
     echo "Nothing is changed."
+    cd "$TOP_DIR"
     clean_up && return
 fi
 
@@ -439,7 +448,9 @@ EOF
 
 # Load platform-specific local.conf settings
 if [ -e "${PLATFORM_DIR}/conf/local.conf.fragment" ]; then
+    printf '\n# PLATFORM_FRAGMENT_BEGIN\n' >> conf/local.conf
     cat "${PLATFORM_DIR}/conf/local.conf.fragment" >> conf/local.conf
+    printf '# PLATFORM_FRAGMENT_END\n' >> conf/local.conf
 fi
 
 # Apply cache mirror settings if configured (applies to all platforms)
@@ -486,6 +497,7 @@ if [ ! -e SOURCE_THIS ]; then
     echo "echo \"Back to build project $PROJECT_DIR.\"" >> SOURCE_THIS
 fi
 
+[ -L "${TOP_DIR}/images" ] && rm "${TOP_DIR}/images"
 mkdir -p "${TOP_DIR}/images"
 ln -sfn "${PROJECT_DIR}/tmp/deploy/images/${MACHINE}" "${TOP_DIR}/images/${MACHINE}"
 
