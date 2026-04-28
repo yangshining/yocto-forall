@@ -1,2 +1,7 @@
 # NVIDIA Tegra-specific BitBake settings
 PREFERRED_PROVIDER_virtual/kernel = "linux-tegra"
+
+# Use systemd as init manager
+DISTRO_FEATURES:append = " systemd usrmerge"
+VIRTUAL-RUNTIME_init_manager = "systemd"
+VIRTUAL-RUNTIME_initscripts = "systemd-compat-units"

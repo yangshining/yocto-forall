@@ -17,3 +17,8 @@ ENABLE_UART = "1"
 # U-Boot environment
 UBOOT_ENV_SIZE = "0x20000"
 UBOOT_ENV_OFFSET = "0x100000"
+
+# Use systemd as init manager
+DISTRO_FEATURES:append = " systemd usrmerge"
+VIRTUAL-RUNTIME_init_manager = "systemd"
+VIRTUAL-RUNTIME_initscripts = "systemd-compat-units"

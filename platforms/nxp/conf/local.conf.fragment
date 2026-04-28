@@ -4,6 +4,11 @@ LAYERSERIES_COMPAT_freescale-layer = "scarthgap whinlatter"
 # NXP QorIQ-specific BitBake settings
 ACCEPT_FSL_EULA = "1"
 
+# Use systemd as init manager
+DISTRO_FEATURES:append = " systemd usrmerge"
+VIRTUAL-RUNTIME_init_manager = "systemd"
+VIRTUAL-RUNTIME_initscripts = "systemd-compat-units"
+
 # ls1028ardb GPU acceleration (uncomment when building for ls1028ardb):
 # PREFERRED_VERSION_weston = "10.0.1.imx"
 # PREFERRED_VERSION_wayland-protocols = "1.25.imx"
