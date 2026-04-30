@@ -48,7 +48,7 @@ There is no standalone top-level unit test suite in this repo. Validate changes 
 - For boot-impacting changes, verify artifacts under `build-<machine>/tmp/deploy/images/<machine>/`.
 
 ## Commit & Pull Request Guidelines
-Current history is minimal (`add xlinx linux support`) and uses short, imperative summaries. Continue with concise, scope-first messages, for example:
+Use concise, scope-first imperative commit messages, for example:
 
 - `meta-user: enable xsct device-tree flow`
 - `kernel: add motorcomm phy patch`

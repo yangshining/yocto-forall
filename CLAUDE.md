@@ -38,7 +38,9 @@ GitHub Actions runs `bitbake -p` (parse-only) on every PR and push to `main` acr
 Known pre-existing CI warnings (do not fail the job):
 - `rk3568-evb` and `stm32mp15-common` are project-level wrapper machine names with no corresponding `.conf` files in their BSP layers — pre-existing upstream issue.
 
-Note: NXP, Rockchip, and Raspberry Pi BSP layers previously caused `LAYERSERIES_COMPAT` errors (layers declared `whinlatter`, core requires `scarthgap`). Fixed via `LAYERSERIES_COMPAT_*` overrides in each platform's `conf/local.conf.fragment`.
+Note: NXP, Rockchip, and Raspberry Pi BSP layers previously caused `LAYERSERIES_COMPAT` errors (layers declared `whinlatter` or `kirkstone`, core requires `scarthgap`). Fixed via `LAYERSERIES_COMPAT_*` overrides in each platform's `conf/local.conf.fragment`. NXP has three overrides: `freescale-layer`, `freescale-distro`, and `meta-qoriq`.
+
+Note: `systemd` and `usrmerge` are enabled via `DISTRO_FEATURES:append` in every platform's `conf/local.conf.fragment` **except Xilinx** — the `petalinux` distro enables systemd by default, so no override is needed there.
 
 ## Architecture
 

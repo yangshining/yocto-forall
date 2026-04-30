@@ -93,11 +93,13 @@ submodule is bumped.
 
 ## Known Compatibility Concerns
 
-| Layer | Issue | Action Required |
-|-------|-------|-----------------|
-| `meta-freescale-distro` | `LAYERSERIES_COMPAT` is `kirkstone`; workspace targets `scarthgap` | Update to `kirkstone scarthgap` (or `scarthgap`) in `conf/layer.conf` |
-| `meta-qoriq` | `LAYERSERIES_COMPAT` is `honister kirkstone master`; `scarthgap` is missing | Add `scarthgap` to `LAYERSERIES_COMPAT_meta-qoriq` in `conf/layer.conf` |
-| All 19 submodules | Listed as uninitialized (`-` prefix in `git submodule status`); `LAYERSERIES_COMPAT` could not be read | Run `git submodule update --init --recursive` before a build. Re-read `conf/layer.conf` files and update this table after initialization. |
+| Layer | Issue | Status |
+|-------|-------|--------|
+| `meta-freescale-distro` | Upstream `LAYERSERIES_COMPAT` is `kirkstone`; workspace targets `scarthgap` | ✅ Fixed — `LAYERSERIES_COMPAT_freescale-distro` overridden in `platforms/nxp/conf/local.conf.fragment` |
+| `meta-qoriq` | Upstream `LAYERSERIES_COMPAT` is `honister kirkstone master`; `scarthgap` missing | ✅ Fixed — `LAYERSERIES_COMPAT_meta-qoriq` overridden in `platforms/nxp/conf/local.conf.fragment` |
+| `meta-freescale` | Upstream `LAYERSERIES_COMPAT` is `whinlatter`; workspace targets `scarthgap` | ✅ Fixed — `LAYERSERIES_COMPAT_freescale-layer` overridden in `platforms/nxp/conf/local.conf.fragment` |
+| `meta-raspberrypi` | Upstream `LAYERSERIES_COMPAT` may declare `whinlatter` | ✅ Fixed — `LAYERSERIES_COMPAT_raspberrypi` overridden in `platforms/raspberrypi/conf/local.conf.fragment` |
+| `meta-rockchip` | Upstream `LAYERSERIES_COMPAT` may declare `whinlatter` | ✅ Fixed — `LAYERSERIES_COMPAT_rockchip` overridden in `platforms/rockchip/conf/local.conf.fragment` |
 
 ---
 
