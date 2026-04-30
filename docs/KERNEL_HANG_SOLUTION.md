@@ -39,7 +39,7 @@ Boot → Load Device Tree → Kernel probes PL devices
 
 **What I Did:**
 
-1. **Modified:** `project-spec/meta-user/recipes-bsp/device-tree/files/system-user.dts`
+1. **Modified:** `platforms/xilinx/meta-xilinx-user/recipes-bsp/device-tree/files/system-user.dts`
    ```dts
    /include/ "system-conf.dtsi"
 
@@ -56,7 +56,7 @@ Boot → Load Device Tree → Kernel probes PL devices
    };
    ```
 
-2. **Modified:** `project-spec/meta-user/recipes-bsp/device-tree/device-tree_%.bbappend`
+2. **Modified:** `platforms/xilinx/meta-xilinx-user/recipes-bsp/device-tree/device-tree.bbappend`
    ```bitbake
    FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
@@ -68,7 +68,8 @@ Boot → Load Device Tree → Kernel probes PL devices
 
 **To Apply:**
 ```bash
-cd /home2/yang.xu/tool/sources/yocto-forall
+# From repo root, after entering the build environment:
+# . configs/setup-env.sh -m zynqmp-generic
 bitbake -c cleansstate device-tree
 bitbake device-tree
 bitbake petalinux-image-minimal
@@ -89,7 +90,7 @@ setenv bootargs 'earlycon console=ttyPS0,115200 deferred_probe_timeout=0'
 
 **Option B: Permanent (modify boot script)**
 
-Create `/project-spec/meta-user/recipes-bsp/u-boot/files/boot-script`:
+Create `platforms/xilinx/meta-xilinx-user/recipes-bsp/u-boot/files/boot-script`:
 ```
 bootargs=earlycon console=ttyPS0,115200 root=/dev/ram0 rw deferred_probe_timeout=0
 ```
@@ -111,7 +112,7 @@ bootargs=earlycon console=ttyPS0,115200 root=/dev/ram0 rw deferred_probe_timeout
 
 2. **Add to Yocto build:**
 
-   Create `project-spec/meta-user/recipes-bsp/fpga-bitstream/fpga-bitstream.bb`:
+   Create `platforms/xilinx/meta-xilinx-user/recipes-bsp/fpga-bitstream/fpga-bitstream.bb`:
    ```bitbake
    SUMMARY = "FPGA Bitstream for ZynqMP"
    LICENSE = "CLOSED"
@@ -173,7 +174,8 @@ booti 0x8000000 0x10000000 0x7000000
 ### Rebuild After Changes
 
 ```bash
-cd /home2/yang.xu/tool/sources/yocto-forall
+# From repo root, after entering the build environment:
+# . configs/setup-env.sh -m zynqmp-generic
 
 # Clean and rebuild device tree
 bitbake -c cleansstate device-tree
@@ -183,7 +185,7 @@ bitbake device-tree
 bitbake petalinux-image-minimal
 
 # New DTB location
-ls -lh build-zynqmp-eg-generic/tmp/deploy/images/zynqmp-eg-generic/system.dtb
+ls -lh build-zynqmp-generic/tmp/deploy/images/zynqmp-generic/system.dtb
 ```
 
 ---
@@ -252,7 +254,7 @@ After applying Solution 1 and rebuilding:
 
 1. **Check device tree:**
    ```bash
-   dtc -I dtb -O dts build-zynqmp-eg-generic/tmp/deploy/images/zynqmp-eg-generic/system.dtb | grep "status.*disabled"
+   dtc -I dtb -O dts build-zynqmp-generic/tmp/deploy/images/zynqmp-generic/system.dtb | grep "status.*disabled"
    ```
 
 2. **Boot and check dmesg:**

@@ -5,17 +5,16 @@ This document explains how the Xilinx XSA (Xilinx Support Archive) file is used 
 
 ## XSA File Location
 ```
-Path: /home2/yang.xu/tool/sources/yocto-forall/components/descriptions/system.xsa
-Size: 692KB
+Path: components/descriptions/system.xsa  (relative to repo root)
 ```
 
 ## Configuration
 
-### In local.conf:
+### In local.conf (set in platforms/xilinx/conf/local.conf.fragment):
 ```bitbake
-HDF_MACHINE = "zynqmp-eg-generic"
+HDF_MACHINE = "${MACHINE}"
 HDF_BASE = "file://"
-HDF_PATH = "/home2/yang.xu/tool/sources/yocto-forall/components/descriptions/system.xsa"
+HDF_PATH = "${TOPDIR}/../components/descriptions/system.xsa"
 ```
 
 ### In user_extra.conf:
@@ -122,7 +121,7 @@ Generate BSP files:
 | `XILINX_WITH_ESW` | Enable XSCT workflow | `"xsct"` |
 | `HDF_BASE` | Protocol for XSA location | `"file://"` or `"git://"` |
 | `HDF_PATH` | Path to XSA file | `/path/to/system.xsa` |
-| `HDF_MACHINE` | Machine identifier | `"zynqmp-eg-generic"` |
+| `HDF_MACHINE` | Machine identifier | `"${MACHINE}"` (auto-set) |
 | `HDF_EXT` | File extension | `"xsa"` |
 | `XSCTH_HDF` | Deployed XSA location | `${DEPLOYDIR}/Xilinx-${MACHINE}.xsa` |
 
@@ -199,8 +198,7 @@ Create final image
 
 2. Copy to project location:
    ```bash
-   cp /path/to/new_design.xsa \
-      /home2/yang.xu/tool/sources/yocto-forall/components/descriptions/system.xsa
+   cp /path/to/new_design.xsa components/descriptions/system.xsa
    ```
 
 3. Clean and rebuild:

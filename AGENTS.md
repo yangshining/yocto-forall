@@ -6,7 +6,8 @@ This repository is a Yocto-based multi-BSP build workspace.
 - `components/layers/core/`: core layers (for example `poky`, `meta-openembedded`, `meta-arm`).
 - `components/layers/bsp/`: vendor BSP layers (Xilinx, NXP, Rockchip, STM32MP, Raspberry Pi) managed as submodules.
 - `components/layers/tools/`: tooling layers such as `meta-clang` and `meta-qt5`.
-- `project-spec/meta-user/`: custom project layer for local overrides (`recipes-bsp/`, `recipes-kernel/`, `recipes-support/`, `conf/`).
+- `platforms/common/meta-user/`: cross-platform customizations shared by all machines (priority 5).
+- `platforms/<name>/meta-<name>-user/`: platform-specific overrides (`recipes-bsp/`, `recipes-kernel/`, `recipes-support/`, `conf/`). Do not edit upstream submodule layers directly.
 - `configs/`: environment/bootstrap scripts and project defaults (`setup-env.sh`, `local-proj.conf`).
 - `docs/`: troubleshooting and platform-specific usage notes.
 
@@ -17,7 +18,7 @@ This repository is a Yocto-based multi-BSP build workspace.
   ```
 - Enter build environment (from repo root):
   ```bash
-  . configs/setup-env -m zynqmp-generic
+  . configs/setup-env.sh -m zynqmp-generic
   ```
 - Build an image:
   ```bash
@@ -55,5 +56,5 @@ Current history is minimal (`add xlinx linux support`) and uses short, imperativ
 PRs should include:
 - target machine(s) and image(s),
 - exact build/verification commands executed,
-- changed paths (especially under `project-spec/meta-user/`),
+- changed paths (especially under `platforms/<name>/meta-<name>-user/`),
 - logs or screenshots only when behavior/output changes.

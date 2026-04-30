@@ -46,7 +46,7 @@ U-Boot 启动 → 加载 FPGA bitstream → 启动内核
 ### 当前状态：
 ```bash
 XSA 文件大小：692KB (不包含 bitstream)
-位置：/home2/yang.xu/tool/sources/yocto-forall/components/descriptions/system.xsa
+位置：components/descriptions/system.xsa  (repo root 相对路径)
 ```
 
 ### 方法 A: 从 Vivado 重新导出（推荐）
@@ -81,7 +81,7 @@ XSA 文件大小：692KB (不包含 bitstream)
 复制到 Yocto 项目：
 ```bash
 cp <vivado_project>/design.runs/impl_1/system_wrapper.bit \
-   /home2/yang.xu/tool/sources/yocto-forall/components/descriptions/system.bit
+   components/descriptions/system.bit
 ```
 
 ---
@@ -93,7 +93,7 @@ ZynqMP 使用 `.bin` 格式，需要用 Bootgen 转换：
 ### 创建 BIF 文件
 
 ```bash
-cd /home2/yang.xu/tool/sources/yocto-forall/components/descriptions/
+cd components/descriptions/
 
 cat > fpga.bif << 'EOF'
 all:
@@ -136,7 +136,7 @@ cp system.bit.bin /tftpboot/
 
 ### 方法 B: 添加到 Yocto 镜像（永久方案）
 
-创建 recipe：`project-spec/meta-user/recipes-bsp/fpga-manager/fpga-bitstream.bb`
+创建 recipe：`platforms/xilinx/meta-xilinx-user/recipes-bsp/fpga-manager/fpga-bitstream.bb`
 
 ```bitbake
 SUMMARY = "FPGA Bitstream for system design"
@@ -166,8 +166,8 @@ PACKAGE_ARCH = "${MACHINE_ARCH}"
 
 放置 bitstream：
 ```bash
-mkdir -p project-spec/meta-user/recipes-bsp/fpga-manager/files/
-cp system.bit.bin project-spec/meta-user/recipes-bsp/fpga-manager/files/
+mkdir -p platforms/xilinx/meta-xilinx-user/recipes-bsp/fpga-manager/files/
+cp system.bit.bin platforms/xilinx/meta-xilinx-user/recipes-bsp/fpga-manager/files/
 ```
 
 添加到镜像：在 `user_extra.conf` 中添加：
@@ -285,7 +285,7 @@ saveenv
 
 ### 修改 U-Boot 启动脚本 Recipe
 
-修改：`project-spec/meta-user/recipes-bsp/u-boot/files/boot.cmd`
+修改：`platforms/xilinx/meta-xilinx-user/recipes-bsp/u-boot/files/boot.cmd`
 
 ```bash
 # Load and program FPGA
@@ -299,7 +299,7 @@ fi
 # ... existing boot commands ...
 ```
 
-修改：`project-spec/meta-user/recipes-bsp/u-boot/u-boot-xlnx-scr.bbappend`
+修改：`platforms/xilinx/meta-xilinx-user/recipes-bsp/u-boot/u-boot-xlnx-scr.bbappend`
 
 ```bitbake
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
@@ -361,7 +361,7 @@ Starting kernel ...
 
 **解决：** 检查 U-Boot 配置
 ```bash
-# 在 project-spec/meta-user/recipes-bsp/u-boot/u-boot-xlnx_%.bbappend
+# 在 platforms/xilinx/meta-xilinx-user/recipes-bsp/u-boot/u-boot-xlnx_%.bbappend
 UBOOT_FEATURES += "fpga"
 ```
 
