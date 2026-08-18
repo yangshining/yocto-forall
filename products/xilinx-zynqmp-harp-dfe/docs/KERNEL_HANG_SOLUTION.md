@@ -1,284 +1,134 @@
-# Kernel Hang Problem - Root Cause and Solutions
+# HARP DFE Kernel-Stall Investigation
 
-## Problem Analysis
+## Evidence Status
 
-### Symptoms
-```
+Historical logs show an RCU stall after an Xilinx interrupt-controller probe. Access to unconfigured PL address space is a plausible cause, but this repository does not contain a recorded hardware experiment proving that diagnosis or a recorded boot proving a fix.
+
+`harp-dfe-xczu67dr` is currently Parse-Validated. Do not cite this document as Boot-Validated evidence.
+
+Example historical symptom:
+
+```text
 [5.666687] irq-xilinx: /pl-bus/interrupt-controller@a0000000
-[26.665501] rcu: INFO: rcu_sched detected stalls on CPUs/tasks:
-[26.680464] rcu: (detected by 1, t=5252 jiffies, g=-283, q=18 ncpus=4)
+[26.665501] rcu: INFO: rcu_sched detected stalls on CPUs/tasks
 ```
 
-Kernel hangs at ~26 seconds when probing FPGA (PL) devices.
+## Current Metadata
 
-### Root Cause
+The product device tree does not disable the complete PL bus or FPGA region.
 
-**The FPGA (Programmable Logic) is NOT programmed, but the device tree contains PL IP configurations**
+`system-user.dtsi` currently:
 
-Your XSA file contains FPGA IP cores:
-- `interrupt-controller@a0000000` - AXI Interrupt Controller
-- `radio_ctrl_axi@a0004000` - Radio Control IP
-- `cpri0_axi`, `cpri1_axi`, `cpri_top_axi` - CPRI Interface IPs
-- `pwr_axi@a0006000` - Power Management IP
-- `pap_axi@a0007000` - PAP IP
-- `inter_link_axi@a0008000` - Inter-link IP
-- `axi_firewall@a000c000` - AXI Firewall
+- disables `gpio_keys`;
+- disables `axi_intc_ku5p` pending an overlay;
+- disables one 1588 timer instance;
+- enables `debug_bridge_0` and `axi_quad_spi_0`;
+- adds generic-UIO mappings beneath `amba_pl`;
+- configures additional PL Ethernet and DMA nodes.
 
-**Problem Flow:**
+Therefore the earlier statement that all PL devices were disabled is false. A matching bitstream or a more selective device-tree policy may still be required.
+
+## Investigation Sequence
+
+### 1. Capture Boot State
+
+Record the exact board revision, boot media, image commit, XSA checksum, U-Boot log, and kernel log. At the U-Boot prompt capture:
+
+```text
+version
+bdinfo
+printenv
+help fpga
+fpga info 0
 ```
-Boot → Load Device Tree → Kernel probes PL devices
-    → Access address 0xa0000000 
-    → FPGA not programmed, no response
-    → CPU hangs waiting for response
-    → RCU stall detected
-```
 
-## Solutions
+Do not assume the PL is configured because an XSA exists in the build. The checked-in XSA contains no `.bit` file, and the repository has no active automatic U-Boot bitstream-loading flow.
 
-### Solution 1: Disable PL Devices in Device Tree (IMPLEMENTED ✅)
+### 2. Inspect the Deployed Device Tree
 
-**What I Did:**
-
-1. **Modified:** `products/xilinx-zynqmp-harp-dfe/meta-xilinx-zynqmp-harp-dfe/recipes-bsp/device-tree/files/system-user.dtsi`
-   ```dts
-   /include/ "system-conf.dtsi"
-
-   / {
-   };
-
-   /* Disable PL devices until FPGA is programmed */
-   &axi_intc_0 {
-       status = "disabled";
-   };
-
-   &fpga_region {
-       status = "disabled";
-   };
-   ```
-
-2. **Modified:** `products/xilinx-zynqmp-harp-dfe/meta-xilinx-zynqmp-harp-dfe/recipes-bsp/device-tree/device-tree.bbappend`
-   ```bitbake
-   FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
-
-   SRC_URI += "file://system-user.dtsi"
-
-   # Apply user device tree overlay
-   EXTRA_DT_INCLUDE_FILES += "system-user.dtsi"
-   ```
-
-**To Apply:**
 ```bash
-# From repo root, after entering the build environment:
-# . configs/setup-env.sh -T harp-dfe-xczu67dr -p scarthgap
+umask 0022
+. configs/setup-env.sh -T harp-dfe-xczu67dr -p scarthgap
+bitbake device-tree
+dtc -I dtb -O dts \
+  build/scarthgap/harp-dfe-xczu67dr/tmp/deploy/images/harp-dfe-xczu67dr/system.dtb \
+  > /tmp/harp-dfe-system.dts
+```
+
+Search for the first device named in the boot log and its parents:
+
+```bash
+rg -n 'a0000000|interrupt-controller|amba_pl|status =' /tmp/harp-dfe-system.dts
+```
+
+Confirm whether a product fragment overrides the generated node and whether the node is enabled at boot.
+
+### 3. Verify Hardware/Software Match
+
+The bitstream, XSA, generated device tree, and kernel drivers must describe the same hardware design. A bitstream from another Vivado build is not valid evidence even if programming succeeds.
+
+Check the XSA identity:
+
+```bash
+unzip -p products/xilinx-zynqmp-harp-dfe/hardware/system.xsa xsa.json
+```
+
+### 4. Run One Controlled Experiment
+
+Choose one variable at a time:
+
+- program a verified matching bitstream before Linux boots; or
+- temporarily disable only the first suspect node and its dependent devices.
+
+Do not broadly disable all PL nodes and call the product fixed. That can hide the stall by removing required product functionality.
+
+For a device-tree experiment:
+
+1. make the change in the product-owned DTS fragment;
+2. rebuild `device-tree` and the image;
+3. decompile the deployed DTB to confirm the change is present;
+4. boot the same board and capture a complete log;
+5. revert or narrow the experiment after identifying the failing access.
+
+```bash
 bitbake -c cleansstate device-tree
 bitbake device-tree
 bitbake petalinux-image-minimal
 ```
 
-**Result:** System will boot without trying to access PL devices.
+### 5. Record the Result
 
----
+A useful boot record includes:
 
-### Solution 2: Modify Kernel Command Line
-
-Add kernel parameter to disable deferred probe timeout:
-
-**Option A: Temporary (U-Boot command line)**
-```
-setenv bootargs 'earlycon console=ttyPS0,115200 deferred_probe_timeout=0'
-```
-
-**Option B: Permanent (modify boot script)**
-
-Create `products/xilinx-zynqmp-harp-dfe/meta-xilinx-zynqmp-harp-dfe/recipes-bsp/u-boot/files/boot-script`:
-```
-bootargs=earlycon console=ttyPS0,115200 root=/dev/ram0 rw deferred_probe_timeout=0
+```text
+Repository commit:
+Target / Baseline:
+Board serial and revision:
+XSA SHA256:
+Bitstream SHA256 and source build:
+DTB SHA256:
+Boot command:
+First failing or successful kernel line:
+Full log location:
+Result: pass / fail
 ```
 
----
+Only a reproducible successful boot on named hardware can support Boot-Validated status.
 
-### Solution 3: Load FPGA Bitstream Before Kernel Boot (RECOMMENDED for Production)
+## About Kernel Parameters
 
-**Prerequisites:**
-1. Extract bitstream from Vivado design
-2. Add bitstream to image
+Parameters such as `deferred_probe_timeout=0` can change deferred-probe behavior, but they do not make an unresponsive MMIO target safe. Use them only as diagnostics and do not treat them as a fix for PL bus access.
 
-**Steps:**
+## Bitstream Path
 
-1. **Export bitstream from Vivado:**
-   ```
-   Vivado → File → Export → Export Bitstream
-   ```
+The manual validation procedure is documented in [U-Boot FPGA Bitstream Loading Guide](UBOOT_FPGA_LOADING_GUIDE.md). It is currently a proposed experiment, not an implemented boot policy.
 
-2. **Add to Yocto build:**
+## Exit Criteria
 
-   Create `products/xilinx-zynqmp-harp-dfe/meta-xilinx-zynqmp-harp-dfe/recipes-bsp/fpga-bitstream/fpga-bitstream.bb`:
-   ```bitbake
-   SUMMARY = "FPGA Bitstream for ZynqMP"
-   LICENSE = "CLOSED"
+The investigation is complete only when:
 
-   SRC_URI = "file://system.bit"
-
-   FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
-
-   inherit deploy
-
-   do_install() {
-       install -d ${D}/lib/firmware
-       install -m 0644 ${WORKDIR}/system.bit ${D}/lib/firmware/
-   }
-
-   do_deploy() {
-       install -d ${DEPLOYDIR}
-       install -m 0644 ${WORKDIR}/system.bit ${DEPLOYDIR}/
-   }
-
-   addtask deploy after do_install
-   FILES:${PN} = "/lib/firmware/*"
-   ```
-
-3. **Load bitstream in U-Boot:**
-   ```
-   fpga load 0 ${loadaddr} ${filesize}
-   ```
-
----
-
-### Solution 4: Disable PL Clock in Device Tree
-
-If you want PS-only operation:
-
-**Modify device tree:**
-```dts
-&amba_pl {
-    status = "disabled";
-};
-
-&fpga_full {
-    status = "disabled";
-};
-```
-
----
-
-## Quick Fix Commands
-
-### Temporary Boot Fix (U-Boot)
-
-At U-Boot prompt:
-```bash
-setenv bootargs 'earlycon console=ttyPS0,115200 deferred_probe_timeout=0'
-booti 0x8000000 0x10000000 0x7000000
-```
-
-### Rebuild After Changes
-
-```bash
-# From repo root, after entering the build environment:
-# . configs/setup-env.sh -T harp-dfe-xczu67dr -p scarthgap
-
-# Clean and rebuild device tree
-bitbake -c cleansstate device-tree
-bitbake device-tree
-
-# Rebuild image
-bitbake petalinux-image-minimal
-
-# New DTB location
-ls -lh build/scarthgap/harp-dfe-xczu67dr/tmp/deploy/images/harp-dfe-xczu67dr/system.dtb
-```
-
----
-
-## Understanding the XSA → Device Tree Flow
-
-```
-system.xsa (contains FPGA design)
-    ↓
-[XSCT + Device Tree Generator]
-    ↓
-Extracts ALL IP configurations:
-    - PS (Processing System) ✅ Works
-    - PL (Programmable Logic) ⚠️ Needs bitstream
-    ↓
-Generates system-top.dts with ALL devices
-    ↓
-Kernel tries to probe ALL devices
-    ↓
-⚠️ PROBLEM: PL devices not ready → HANG
-```
-
----
-
-## Recommended Approach
-
-### For Development/Testing:
-**Use Solution 1** (Disable PL devices in device tree)
-- Fast to implement ✅
-- Already done
-- Just rebuild
-
-### For Production:
-**Use Solution 3** (Load bitstream)
-- Proper hardware initialization
-- All IP cores functional
-- Requires bitstream from Vivado
-
----
-
-## How to Generate Bitstream from XSA
-
-If you need the bitstream:
-
-1. **Check if XSA contains bitstream:**
-   ```bash
-   unzip -l system.xsa | grep .bit
-   ```
-
-2. **If YES, extract it:**
-   ```bash
-   unzip system.xsa '*.bit' -d bitstream/
-   ```
-
-3. **If NO, regenerate XSA in Vivado with bitstream:**
-   ```
-   Vivado → File → Export → Export Hardware
-   ☑ Include bitstream
-   ```
-
----
-
-## Verification Steps
-
-After applying Solution 1 and rebuilding:
-
-1. **Check device tree:**
-   ```bash
-   dtc -I dtb -O dts build/scarthgap/harp-dfe-xczu67dr/tmp/deploy/images/harp-dfe-xczu67dr/system.dtb | grep "status.*disabled"
-   ```
-
-2. **Boot and check dmesg:**
-   ```bash
-   # Should NOT see:
-   # - irq-xilinx: /pl-bus/interrupt-controller@a0000000
-   # - FPGA Region probed
-   ```
-
-3. **Expected boot time:**
-   - Should complete in < 10 seconds
-   - No RCU stall warnings
-
----
-
-## Summary
-
-| Solution | Speed | Complexity | Production Ready |
-|----------|-------|------------|------------------|
-| 1. Disable PL DT | Fast ✅ | Low | No (PS-only) |
-| 2. Kernel cmdline | Fast | Low | Maybe |
-| 3. Load bitstream | Medium | Medium | Yes ✅ |
-| 4. Disable PL clock | Fast | Low | No (PS-only) |
-
-**Current Status:** Solution 1 implemented, needs rebuild.
-
-**Next Step:** Rebuild device-tree and image to test.
+- the first failing access is identified;
+- the XSA, bitstream, and DTB are proven to match;
+- the boot result is repeatable on a named board;
+- required PL functions remain available;
+- the evidence is stored with the release or CI/hardware-validation record.

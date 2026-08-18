@@ -82,6 +82,16 @@ bitbake -p
 
 Boot artifacts are under `build/<profile>/<target>/tmp/deploy/images/<machine>/`.
 
+## Documentation Map
+
+| Topic | Document |
+|---|---|
+| Framework model and invariants | `docs/architecture.md` |
+| Host setup, builds, and troubleshooting | `docs/building.md` |
+| Adding targets, platforms, products, or profiles | `docs/adding-support.md` |
+| Pinned upstream revisions | `docs/layers-versions.md` |
+| HARP DFE product state | `products/xilinx-zynqmp-harp-dfe/README.md` |
+
 ## Agent skills
 
 ### Issue tracker

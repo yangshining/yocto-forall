@@ -90,6 +90,14 @@ Every generated build contains `conf/yocto-forall.manifest`. Reusing a build dir
 | `-l` | List profiles and targets |
 | `-V` | Validate registry metadata |
 
+## Documentation
+
+- [Documentation index](docs/README.md)
+- [Architecture](docs/architecture.md)
+- [Building and troubleshooting](docs/building.md)
+- [Adding targets and Baseline Profiles](docs/adding-support.md)
+- [Pinned layer versions](docs/layers-versions.md)
+
 ## Repository Structure
 
 ```text
@@ -134,7 +142,7 @@ CI runs the setup contracts and a `(baseline, target)` parse matrix. See `.githu
 
 ## Xilinx ZynqMP HARP DFE
 
-The product hardware input is `products/xilinx-zynqmp-harp-dfe/hardware/system.xsa`. Product-specific guides are under `products/xilinx-zynqmp-harp-dfe/docs/`.
+The product hardware input is `products/xilinx-zynqmp-harp-dfe/hardware/system.xsa`. See the [Product Integration guide](products/xilinx-zynqmp-harp-dfe/README.md) for its current evidence level and hardware-specific documentation.
 
 ## License
 

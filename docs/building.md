@@ -1,0 +1,104 @@
+# Building Targets
+
+## Host Prerequisites
+
+Use a Yocto-supported Linux host. The CI reference environment is Ubuntu 22.04 and installs its package set in `.github/workflows/ci.yml`.
+
+Before setup:
+
+```bash
+git submodule update --init --recursive
+umask 0022
+```
+
+Yocto rejects a restrictive umask that prevents required read/execute permissions. The Whinlatter profile also requires Python 3.9 or later and a GCC/G++ toolchain with C++20 support (GCC 10.1 or later); Ubuntu 20.04's default Python 3.8 and GCC 9 are insufficient.
+
+## Discover and Validate
+
+The setup script must be sourced:
+
+```bash
+. configs/setup-env.sh -V
+. configs/setup-env.sh -l
+. configs/setup-env.sh -n -T harp-dfe-xczu67dr
+```
+
+`-V` validates registry structure without requiring initialized layer checkouts. `-n` resolves a target and prints its profile, paths, image, and Support Level without creating a build environment.
+
+## Configure and Build
+
+Canonical target selection:
+
+```bash
+. configs/setup-env.sh -T harp-dfe-xczu67dr -p scarthgap
+bitbake petalinux-image-minimal
+```
+
+Compatibility selection:
+
+```bash
+. configs/setup-env.sh -m rk3568-evb
+bitbake core-image-minimal
+```
+
+`-p` is optional and useful in automation. It fails when the requested profile differs from the target record.
+
+The Bash wrapper selects the target's default image when no BitBake arguments are supplied:
+
+```bash
+./proj_build.sh harp-dfe-xczu67dr
+./proj_build.sh ls1043ardb -c compile virtual/kernel
+```
+
+## Re-enter a Build
+
+```bash
+. build/<profile>/<target>/SOURCE_THIS
+```
+
+Build artifacts are normally deployed under:
+
+```text
+build/<profile>/<target>/tmp/deploy/images/<machine>/
+```
+
+The repository also maintains a best-effort convenience symlink at `images/<target>` after setup.
+
+## Custom Paths
+
+```bash
+. configs/setup-env.sh -T <target> \
+    -b /path/to/build \
+    -d /path/to/downloads \
+    -c /path/to/sstate-cache \
+    -j 16 \
+    -t 12
+```
+
+Custom build directories still receive a manifest and cannot be reused for another target identity. Sharing downloads or sstate across different Baseline Profiles is not recommended.
+
+## Validation Commands
+
+```bash
+bash tests/setup-env-test.sh
+. configs/setup-env.sh -V
+. configs/setup-env.sh -T <target>
+bitbake-layers show-layers
+bitbake -p
+bitbake <recipe-or-image>
+```
+
+Use `bitbake -p` for metadata validation. It does not prove that an image builds or boots.
+
+## Common Failures
+
+| Message or symptom | Resolution |
+|---|---|
+| `This script must be sourced` | Run `. configs/setup-env.sh ...`, not `./configs/setup-env.sh`. |
+| Unknown target or machine | Run `. configs/setup-env.sh -l`; do not invent aliases for absent hardware. |
+| Target binds to another baseline | Remove the incorrect `-p` assertion or update the checked-in target after validating a real port. |
+| Build directory belongs to another target | Use the default isolated path or choose a new `-b` directory. Do not delete the manifest to bypass the guard. |
+| Required layer is missing | Initialize submodules recursively and verify the pinned gitlink exists. |
+| Yocto reports an unsafe umask | Start a build shell with `umask 0022`, then source setup again. |
+| BitBake requires newer Python/GCC | Use Ubuntu 22.04, a supported buildtools tarball, or equivalent Python/GCC versions. Do not disable the sanity check. |
+| XSCT deprecation warning on Xilinx | The current Scarthgap Xilinx adapter still uses the XSCT flow. Treat the warning as upstream migration work, not a parse failure. |

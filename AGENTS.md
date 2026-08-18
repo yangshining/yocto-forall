@@ -12,6 +12,7 @@ This repository is a multi-Baseline Yocto Build Framework.
 - `platforms/common/meta-user/`: customizations verified across all declared profiles.
 - `configs/`: environment/bootstrap scripts and project defaults.
 - `tests/`: fast setup/registry contract tests.
+- `docs/README.md`: current human-facing documentation map; completed plans are not authoritative docs.
 
 ## Build, Test, and Development Commands
 
@@ -42,6 +43,7 @@ Run fast contracts with `bash tests/setup-env-test.sh`. Rebuild one component wi
 - Keep series-specific layer lists/fragments in `platforms/<id>/baselines/` or `products/<id>/baselines/`.
 - Do not add `LAYERSERIES_COMPAT_*` overrides to force an upstream layer onto another series.
 - Keep product behavior out of `platforms/`; product-specific content belongs under `products/<product>/`.
+- When target bindings, layer pins, or support evidence change, update README, `docs/layers-versions.md`, CI, and the relevant platform/product guide in the same change.
 
 ## Testing Guidelines
 

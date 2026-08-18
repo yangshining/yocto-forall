@@ -46,6 +46,10 @@ _Avoid_: Mixed baseline, forced compatibility
 An isolated, pinned set of core and integration layers for one Yocto Series Baseline. A Product Machine or Reference Machine binds to exactly one Baseline Profile.
 _Avoid_: Runtime branch switch, shared mutable core layers
 
+**Integration Source**:
+The direct gitlink checkout containing one or more selected platform or tool layers. An Integration Source is claimed by exactly one Baseline Profile, even when different profiles would select different sublayers from that checkout.
+_Avoid_: Shared BSP checkout, per-sublayer ownership
+
 **Support Level**:
 An evidence-backed promise assigned to a build target. Higher levels include the guarantees of every lower level.
 _Avoid_: Supported, working
