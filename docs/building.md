@@ -50,6 +50,25 @@ The Bash wrapper selects the target's default image when no BitBake arguments ar
 ./proj_build.sh ls1043ardb -c compile virtual/kernel
 ```
 
+### Jetson AGX Orin
+
+On an older host, enter the Yocto 5.2.3 extended-buildtools environment first. Then configure the Whinlatter target and build its default image:
+
+```bash
+. "$HOME/.yocto/buildtools/5.2.3/environment-setup-x86_64-pokysdk-linux"
+umask 0022
+. configs/setup-env.sh \
+    -T jetson-agx-orin-devkit \
+    -p whinlatter \
+    -j 32 \
+    -t 32
+
+bitbake -c fetch linux-jammy-nvidia-tegra nvidia-kernel-oot
+bitbake core-image-minimal
+```
+
+The Tegra profile uses depth-one Git fetches for the pinned OE4T kernel sources and forces those fetches to HTTP/1.1. This avoids mirroring the full NVIDIA kernel history and improves reliability through proxies that reset long GitHub transfers. The first kernel fetch can still take several minutes because the current source tree is large; subsequent builds reuse the shallow tarball in `.yocto-cache/whinlatter/downloads/`.
+
 ## Re-enter a Build
 
 ```bash
@@ -101,4 +120,5 @@ Use `bitbake -p` for metadata validation. It does not prove that an image builds
 | Required layer is missing | Initialize submodules recursively and verify the pinned gitlink exists. |
 | Yocto reports an unsafe umask | Start a build shell with `umask 0022`, then source setup again. |
 | BitBake requires newer Python/GCC | Use Ubuntu 22.04, a supported buildtools tarball, or equivalent Python/GCC versions. Do not disable the sanity check. |
+| Jetson fetch reports `curl 56`, `SSL_ERROR_SYSCALL`, or `early EOF` | Re-run setup so the generated `local.conf` includes the Tegra shallow-fetch and HTTP/1.1 settings, then retry the failed fetch task. Do not delete unrelated download-cache mirrors. |
 | XSCT deprecation warning on Xilinx | The current Scarthgap Xilinx adapter still uses the XSCT flow. Treat the warning as upstream migration work, not a parse failure. |

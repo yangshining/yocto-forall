@@ -1,5 +1,18 @@
 # NVIDIA Tegra-specific BitBake settings
-PREFERRED_PROVIDER_virtual/kernel = "linux-tegra"
+# The pinned meta-tegra machine configuration selects its matching kernel.
+
+# OE4T's kernel repositories have large histories and are fetched through Git
+# submodules. Limit these pinned sources to the requested revision and avoid
+# HTTP/2 proxy resets without changing the user's global Git configuration.
+TEGRA_FETCHCMD_GIT = "git -c gc.autoDetach=false -c core.pager=cat -c safe.bareRepository=all -c clone.defaultRemoteName=origin -c http.version=HTTP/1.1"
+
+FETCHCMD_git:pn-linux-jammy-nvidia-tegra = "${TEGRA_FETCHCMD_GIT}"
+FETCHCMD_git:pn-nvidia-kernel-oot = "${TEGRA_FETCHCMD_GIT}"
+
+BB_GIT_SHALLOW:pn-linux-jammy-nvidia-tegra = "1"
+BB_GIT_SHALLOW_DEPTH:pn-linux-jammy-nvidia-tegra = "1"
+BB_GIT_SHALLOW:pn-nvidia-kernel-oot = "1"
+BB_GIT_SHALLOW_DEPTH:pn-nvidia-kernel-oot = "1"
 
 # Use systemd as init manager
 DISTRO_FEATURES:append = " systemd usrmerge"

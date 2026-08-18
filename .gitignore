@@ -9,3 +9,12 @@ bitbake-cookerdaemon.log
 /task_plan.md
 /findings.md
 /progress.md
+
+# Local teaching workspace
+/MISSION.md
+/RESOURCES.md
+/NOTES.md
+/assets/
+/lessons/
+/reference/
+/learning-records/
