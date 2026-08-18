@@ -1,6 +1,3 @@
-# Override layer series compatibility (meta-rockchip declares whinlatter, we run scarthgap)
-LAYERSERIES_COMPAT_rockchip = "scarthgap whinlatter"
-
 # Rockchip-specific BitBake settings
 PREFERRED_PROVIDER_virtual/kernel = "linux-rockchip"
 

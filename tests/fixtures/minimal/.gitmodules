@@ -1,0 +1,3 @@
+[submodule "components/layers/bsp/fixture/meta-shared"]
+    path = components/layers/bsp/fixture/meta-shared
+    url = https://example.invalid/meta-shared.git

@@ -1,0 +1,3 @@
+MACHINE ??= "qemux86-64"
+DISTRO ?= "poky"
+CONF_VERSION = "2"

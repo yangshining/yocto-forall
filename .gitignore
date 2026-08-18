@@ -1,3 +1,11 @@
 build-*
+build/
+.yocto-cache/
 images
 .worktrees
+bitbake-cookerdaemon.log
+
+# Local agent working notes
+/task_plan.md
+/findings.md
+/progress.md

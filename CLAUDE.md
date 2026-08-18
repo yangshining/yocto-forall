@@ -1,110 +1,97 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code when working with this repository.
 
 ## What This Repo Is
 
-A multi-BSP Yocto build workspace for embedded SoC development. It supports building Linux images across Xilinx ZynqMP, NXP QorIQ, Rockchip RK3568, STM32MP, Raspberry Pi, and Tegra platforms. All vendor layers are managed as git submodules.
+A single-branch, multi-Baseline Yocto Build Framework. Every Reference Machine or Product Machine binds to exactly one isolated Baseline Profile. Core checkouts are side by side; never switch one shared Poky checkout at runtime and never force cross-series compatibility.
 
 ## Common Commands
 
 ```bash
-# First-time setup: initialize all submodules (19 vendor BSP layers)
 git submodule update --init --recursive
-
-# Enter build environment for a specific machine
-. configs/setup-env.sh -m zynqmp-generic
-
-# Re-enter an existing build env (after shell restart)
-. build-<machine>/SOURCE_THIS
-
-# Build full image
-bitbake petalinux-image-minimal    # Xilinx default
-bitbake core-image-minimal         # Generic minimal
-
-# Rebuild a single component
-bitbake -c cleansstate device-tree && bitbake device-tree
-
-# Validation: recipe-level check (parse only, no build)
+. configs/setup-env.sh -V
+. configs/setup-env.sh -l
+. configs/setup-env.sh -T harp-dfe-xczu67dr -p scarthgap
+. configs/setup-env.sh -m rk3568-evb       # compatibility selector
+. build/scarthgap/harp-dfe-xczu67dr/SOURCE_THIS
+bitbake petalinux-image-minimal
 bitbake -p
+bash tests/setup-env-test.sh
 ```
 
-`setup-env.sh` flags: `-m <machine>`, `-j <parallel-make-jobs>`, `-t <bb-threads>`, `-b <build-dir>`, `-d <dl-dir>`, `-c <sstate-dir>`.
-
-## CI
-
-GitHub Actions runs `bitbake -p` (parse-only) on every PR and push to `main` across 5 platforms. See `.github/workflows/ci.yml`. Tegra is excluded from CI until locally verified.
-
-Known pre-existing CI warnings (do not fail the job):
-- `rk3568-evb` and `stm32mp15-common` are project-level wrapper machine names with no corresponding `.conf` files in their BSP layers — pre-existing upstream issue.
-
-Note: NXP, Rockchip, and Raspberry Pi BSP layers previously caused `LAYERSERIES_COMPAT` errors (layers declared `whinlatter` or `kirkstone`, core requires `scarthgap`). Fixed via `LAYERSERIES_COMPAT_*` overrides in each platform's `conf/local.conf.fragment`. NXP has three overrides: `freescale-layer`, `freescale-distro`, and `meta-qoriq`.
-
-Note: `systemd` and `usrmerge` are enabled via `DISTRO_FEATURES:append` in every platform's `conf/local.conf.fragment` **except Xilinx** — the `petalinux` distro enables systemd by default, so no override is needed there.
+`setup-env.sh` also supports `-j`, `-t`, `-b`, `-d`, `-c`, and dry-run `-n`. `-p` verifies a checked-in binding; it does not override one.
 
 ## Architecture
 
-```
-components/
-  layers/core/                    # poky, meta-openembedded, meta-arm (all machines)
-  layers/bsp/                     # Vendor BSP layers (git submodules): xilinx/, nxp/, rockchip/, stm32mp/, raspberrypi/, nvidia/
-  layers/tools/                   # meta-clang, meta-qt5
-  descriptions/                   # XSA hardware definitions (Xilinx)
-configs/
-  setup-env.sh                    # Environment init: auto-discovers platform, configures layers and local.conf
-  local-proj.conf                 # Project-wide BitBake settings (XSA path, XSCT tools, work dir exclusions)
-platforms/
-  common/
-    meta-user/                    # Cross-platform customization layer (priority 5)
-      conf/layer.conf             # Includes user_extra.conf
-      conf/user_extra.conf        # IMAGE_INSTALL additions shared by all platforms
-      recipes-support/watchdog/   # watchdog-feeder systemd service
-  xilinx/
-    platform.conf                 # Declares PLATFORM_MACHINE_LAYER, PLATFORM_BSP_LAYERS, PLATFORM_DISTRO
-    conf/local.conf.fragment      # Xilinx-specific BitBake settings appended at setup time
-    meta-xilinx-user/             # Xilinx customization layer (priority 6)
-      recipes-bsp/                # Device tree, U-Boot, FSBL, PMU firmware overrides
-      recipes-kernel/             # Kernel patches (linux-xlnx)
-      recipes-support/            # low-level-init systemd service (Xilinx-only)
-  nxp/ rockchip/ stm32mp/ raspberrypi/ nvidia/
-    platform.conf                 # Same structure as xilinx/
-    conf/local.conf.fragment
-    meta-<name>-user/             # Platform-specific customization layer (priority 6)
-docs/                             # Troubleshooting guides and layer version reference
+```text
+baselines/<profile>/baseline.conf
+components/layers/baselines/<profile>/{poky,meta-openembedded,meta-arm}
+components/layers/bsp/<vendor>/
+platforms/<platform>/{platform.conf,baselines/,targets/,conf/,meta-*}
+products/<product>/{product.conf,baselines/,targets/,conf/,meta-*,hardware/}
+configs/setup-env.sh
+tests/setup-env-test.sh
 ```
 
-**Key architectural rules:**
-- Never edit upstream submodule layers directly. Put overrides in `platforms/<name>/meta-<name>-user/` or `configs/local-proj.conf`.
-- `setup-env.sh` auto-discovers the platform by scanning `platforms/*/platform.conf`, matching `PLATFORM_MACHINE_LAYER` to the detected machine's BSP layer. No hardcoded platform lists.
-- To add a new SoC platform: add a submodule under `components/layers/bsp/<vendor>/`, create `platforms/<name>/platform.conf`, `conf/local.conf.fragment`, and `meta-<name>-user/conf/layer.conf`. No changes to `setup-env.sh` required.
-- `platforms/common/meta-user/` (priority 5) holds content shared across all platforms. Platform-specific layers (priority 6) take precedence.
-- Xilinx device tree flow: XSA file → XSCT/HSI tool → `device-tree.bb` → `system.dtb`. Hardware definition path is set in `local-proj.conf` via `HDF_PATH` and `HDF_MACHINE = "${MACHINE}"`.
-- ZynqMP boot stack: FSBL → PMU firmware → ATF (bl31) → U-Boot → Linux, all built as separate recipes.
+Profiles:
 
-## Supported Machines
+| Profile | Platforms |
+|---|---|
+| `scarthgap` | Xilinx ZynqMP, STM32MP |
+| `whinlatter` | Raspberry Pi, Rockchip, Tegra |
+| `kirkstone` | NXP QorIQ |
 
-| Machine flag | Platform | Distro |
-|---|---|---|
-| `zynqmp-generic`, `zynqmp-zcu102` | Xilinx ZynqMP | `petalinux` |
-| `ls1043ardb`, `ls1088ardb`, `lx2160ardb`, `ls1028ardb` | NXP QorIQ | `fsl-qoriq` |
-| `rk3568-evb` | Rockchip | `poky` |
-| `stm32mp15-common` | STM32MP | `poky` |
-| `raspberrypi4-64`, `raspberrypi0-2w` | Raspberry Pi | `poky` |
-| `tegra210-generic`, `tegra186-generic` | Tegra | `poky` |
+Key rules:
 
-Layer version and compatibility info: `docs/layers-versions.md`.
+- Never edit upstream submodules; use project-owned platform or product layers.
+- `platforms/` is reusable SoC-family integration. `products/` owns concrete boot, memory, storage, peripheral, provisioning, hardware-input, and release policy.
+- Xilinx product metadata, kernel patches, device tree, low-level init, and XSA live under `products/xilinx-zynqmp-harp-dfe/`.
+- Target records under `targets/*.conf` are authoritative. Do not rediscover targets by scanning upstream MACHINE files.
+- Profile adapter files contain explicit repository-relative layer paths. Do not search layers by basename.
+- Each selected platform/product layer and its containing gitlink checkout are owned by one Baseline Profile. A second profile needs a separate pinned checkout/path.
+- Generated builds live at `build/<profile>/<target>` and carry `conf/yocto-forall.manifest`; mismatched reuse must fail.
+- Default caches live under `.yocto-cache/<profile>/` and are never shared across profiles.
+- Do not add compatibility overrides for upstream `LAYERSERIES_COMPAT`. Move the target to a coherent profile or port the layer honestly.
+
+## Targets and Support
+
+Use `. configs/setup-env.sh -l` for the current authoritative list. `harp-dfe-xczu67dr` is the intended production Product Machine, but it remains Parse-Validated until image-build, hardware-boot, ownership, and security-maintenance evidence is recorded. CI parse-validates the representative matrix in `.github/workflows/ci.yml`.
+
+Safe aliases are explicit. `rk3568-evb` maps to BSP MACHINE `rockchip-rk3568-evb`; `stm32mp15-common` selects target `stm32mp15-disco`. Do not invent mappings for absent hardware such as the old Tegra 210/186 or ZCU102 names.
 
 ## Coding Conventions
 
-- Shell: 4-space indentation, POSIX-compatible.
-- BitBake append files: `<recipe>_%.bbappend`.
-- Patches: numeric prefix + short subject — `0001-fix-something.patch`. Store kernel patches under `platforms/xilinx/meta-xilinx-user/recipes-kernel/linux-xlnx/files/`.
-- Commit messages: concise, scope-first imperative — `meta-user: enable xsct device-tree flow`, `kernel: add motorcomm phy patch`.
+- Shell: 4-space indentation and POSIX-compatible unless Bash is required.
+- BitBake appends: `<recipe>_%.bbappend` for versioned recipes; exact `<recipe>.bbappend` for unversioned recipes.
+- Patches: numeric prefix plus short subject.
+- HARP DFE kernel patches belong under `products/xilinx-zynqmp-harp-dfe/meta-xilinx-zynqmp-harp-dfe/recipes-kernel/linux-xlnx/files/`.
+- Commit messages: concise, scope-first imperative.
 
 ## Testing
 
-No unit test suite. Validate with BitBake builds:
-- Parse only (fast): `bitbake -p`
-- Recipe level: `bitbake <recipe>`
-- Image level: `bitbake <image>`
-- Boot artifacts: check `build-<machine>/tmp/deploy/images/<machine>/` after a full build.
+```bash
+bash -n configs/setup-env.sh
+dash -n configs/setup-env.sh
+bash tests/setup-env-test.sh
+. configs/setup-env.sh -V
+. configs/setup-env.sh -T <target>
+bitbake-layers show-layers
+bitbake -p
+```
+
+Boot artifacts are under `build/<profile>/<target>/tmp/deploy/images/<machine>/`.
+
+## Agent skills
+
+### Issue tracker
+
+Issues and PRDs are tracked in GitHub Issues for this repository. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Use the canonical triage labels `needs-triage`, `needs-info`, `ready-for-agent`, `ready-for-human`, and `wontfix`. See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+This is a single-context repository: domain vocabulary lives in root `CONTEXT.md`, and architectural decisions live in `docs/adr/`. See `docs/agents/domain.md`.

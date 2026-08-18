@@ -7,10 +7,24 @@ on:
     branches: [main]
 
 jobs:
-  validate:
-    name: Validate [${{ matrix.machine }}]
+  contracts:
+    name: Setup contracts
     runs-on: ubuntu-22.04
-    timeout-minutes: 60
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate shell and registry contracts
+        shell: bash
+        run: |
+          bash -n configs/setup-env.sh proj_build.sh tests/setup-env-test.sh
+          dash -n configs/setup-env.sh
+          bash tests/setup-env-test.sh
+
+  validate:
+    name: Validate [${{ matrix.baseline }} / ${{ matrix.target }}]
+    runs-on: ubuntu-22.04
+    timeout-minutes: 90
 
     env:
       LANG: en_US.UTF-8
@@ -19,20 +33,30 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Keep this list in sync with platforms/ directory.
-        # Each entry must have a corresponding platforms/<name>/platform.conf.
-        machine:
-          - zynqmp-generic
-          - ls1043ardb
-          - rk3568-evb
-          - stm32mp15-common
-          - raspberrypi4-64
-          # tegra210-generic  # enable after local parse-only validation passes
+        include:
+          - baseline: scarthgap
+            target: zynqmp-generic
+            machine: zynqmp-generic
+          - baseline: scarthgap
+            target: harp-dfe-xczu67dr
+            machine: harp-dfe-xczu67dr
+          - baseline: kirkstone
+            target: ls1043ardb
+            machine: ls1043ardb
+          - baseline: whinlatter
+            target: rk3568-evb
+            machine: rockchip-rk3568-evb
+          - baseline: scarthgap
+            target: stm32mp15-disco
+            machine: stm32mp15-disco
+          - baseline: whinlatter
+            target: raspberrypi4-64
+            machine: raspberrypi4-64
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-        timeout-minutes: 30
+        timeout-minutes: 40
         with:
           submodules: recursive
           fetch-depth: 1
@@ -56,43 +80,44 @@ jobs:
 
       - name: Initialize build environment
         env:
-          MATRIX_MACHINE: ${{ matrix.machine }}
+          MATRIX_BASELINE: ${{ matrix.baseline }}
+          MATRIX_TARGET: ${{ matrix.target }}
         shell: bash
         run: |
-          . configs/setup-env.sh -m "$MATRIX_MACHINE"
+          . configs/setup-env.sh -T "$MATRIX_TARGET" -p "$MATRIX_BASELINE"
 
-      - name: Verify environment initialized
+      - name: Verify manifest and machine selection
         env:
+          MATRIX_BASELINE: ${{ matrix.baseline }}
+          MATRIX_TARGET: ${{ matrix.target }}
           MATRIX_MACHINE: ${{ matrix.machine }}
         shell: bash
         run: |
-          test -f "build-${MATRIX_MACHINE}/SOURCE_THIS" || { echo "ERROR: SOURCE_THIS not created by setup-env.sh"; exit 1; }
-
-      - name: Verify machine selection
-        env:
-          MATRIX_MACHINE: ${{ matrix.machine }}
-        shell: bash
-        run: |
-          . "build-${MATRIX_MACHINE}/SOURCE_THIS"
-          actual=$(bitbake-getvar --value MACHINE)
+          build_dir="build/$MATRIX_BASELINE/$MATRIX_TARGET"
+          test -f "$build_dir/SOURCE_THIS"
+          grep -Fx "TARGET_ID=\"$MATRIX_TARGET\"" "$build_dir/conf/yocto-forall.manifest"
+          grep -Fx "BASELINE_ID=\"$MATRIX_BASELINE\"" "$build_dir/conf/yocto-forall.manifest"
+          . "$build_dir/SOURCE_THIS"
+          actual=$(bitbake-getvar --value MACHINE | tail -n 1)
           if [ "$actual" != "$MATRIX_MACHINE" ]; then
             echo "ERROR: MACHINE is '$actual', expected '$MATRIX_MACHINE'"
             exit 1
           fi
-          echo "MACHINE=$actual (ok)"
 
       - name: Show layers
         env:
-          MATRIX_MACHINE: ${{ matrix.machine }}
+          MATRIX_BASELINE: ${{ matrix.baseline }}
+          MATRIX_TARGET: ${{ matrix.target }}
         shell: bash
         run: |
-          . "build-${MATRIX_MACHINE}/SOURCE_THIS"
+          . "build/$MATRIX_BASELINE/$MATRIX_TARGET/SOURCE_THIS"
           bitbake-layers show-layers
 
       - name: Parse recipes
         env:
-          MATRIX_MACHINE: ${{ matrix.machine }}
+          MATRIX_BASELINE: ${{ matrix.baseline }}
+          MATRIX_TARGET: ${{ matrix.target }}
         shell: bash
         run: |
-          . "build-${MATRIX_MACHINE}/SOURCE_THIS"
+          . "build/$MATRIX_BASELINE/$MATRIX_TARGET/SOURCE_THIS"
           bitbake -p

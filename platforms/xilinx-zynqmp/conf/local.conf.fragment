@@ -1,0 +1,9 @@
+# Reusable Xilinx ZynqMP provider policy.
+PREFERRED_PROVIDER_virtual/kernel = "linux-xlnx"
+PREFERRED_PROVIDER_virtual/dtb = "device-tree"
+EXTRA_IMAGEDEPENDS += "device-tree"
+
+LICENSE_FLAGS_ACCEPTED = "xilinx"
+
+# Select the reusable embedded-software flow required by PetaLinux layers.
+XILINX_WITH_ESW = "xsct"

@@ -1,0 +1,3 @@
+# Use evidence-backed support levels
+
+The repository will not make unqualified claims that a platform or machine is “supported.” Every build target will instead be described as Declared, Parse-Validated, Build-Validated, Boot-Validated, or Production-Supported, with each higher level requiring the evidence and commitments of the lower levels; this trades a simpler headline for support promises that CI, release records, and hardware results can actually substantiate. Production-Supported status is reserved for Product Machines, while Reference Machines can reach at most Boot-Validated. `harp-dfe-xczu67dr` is the intended production Product Machine, but remains Parse-Validated until the required build, boot, ownership, and security-maintenance evidence is recorded.

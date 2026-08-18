@@ -1,12 +1,33 @@
-[submodule "components/layers/core/poky"]
-	path = components/layers/core/poky
+[submodule "components/layers/baselines/scarthgap/poky"]
+	path = components/layers/baselines/scarthgap/poky
 	url = https://github.com/yoctoproject/poky
-[submodule "components/layers/core/meta-openembedded"]
-	path = components/layers/core/meta-openembedded
+[submodule "components/layers/baselines/scarthgap/meta-openembedded"]
+	path = components/layers/baselines/scarthgap/meta-openembedded
 	url = https://github.com/openembedded/meta-openembedded
-[submodule "components/layers/core/meta-arm"]
-	path = components/layers/core/meta-arm
+[submodule "components/layers/baselines/scarthgap/meta-arm"]
+	path = components/layers/baselines/scarthgap/meta-arm
 	url = https://git.yoctoproject.org/meta-arm
+[submodule "components/layers/baselines/whinlatter/poky"]
+	path = components/layers/baselines/whinlatter/poky
+	url = https://github.com/yoctoproject/poky
+[submodule "components/layers/baselines/whinlatter/meta-openembedded"]
+	path = components/layers/baselines/whinlatter/meta-openembedded
+	url = https://github.com/openembedded/meta-openembedded
+[submodule "components/layers/baselines/whinlatter/meta-arm"]
+	path = components/layers/baselines/whinlatter/meta-arm
+	url = https://git.yoctoproject.org/meta-arm
+[submodule "components/layers/baselines/kirkstone/poky"]
+	path = components/layers/baselines/kirkstone/poky
+	url = https://github.com/yoctoproject/poky
+[submodule "components/layers/baselines/kirkstone/meta-openembedded"]
+	path = components/layers/baselines/kirkstone/meta-openembedded
+	url = https://github.com/openembedded/meta-openembedded
+[submodule "components/layers/baselines/kirkstone/meta-arm"]
+	path = components/layers/baselines/kirkstone/meta-arm
+	url = https://git.yoctoproject.org/meta-arm
+[submodule "components/layers/baselines/kirkstone/meta-virtualization"]
+	path = components/layers/baselines/kirkstone/meta-virtualization
+	url = https://git.yoctoproject.org/meta-virtualization
 [submodule "components/layers/bsp/raspberrypi/meta-raspberrypi"]
 	path = components/layers/bsp/raspberrypi/meta-raspberrypi
 	url = https://github.com/agherzan/meta-raspberrypi

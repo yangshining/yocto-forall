@@ -1,0 +1,18 @@
+#!/bin/sh
+
+YF_MOCK_BUILD_DIR=${1:-build}
+mkdir -p "$YF_MOCK_BUILD_DIR/conf"
+
+if [ ! -f "$YF_MOCK_BUILD_DIR/conf/local.conf" ]; then
+    cp "$PWD/meta-poky/conf/templates/default/local.conf.sample" \
+        "$YF_MOCK_BUILD_DIR/conf/local.conf"
+fi
+if [ ! -f "$YF_MOCK_BUILD_DIR/conf/bblayers.conf" ]; then
+    cp "$PWD/meta-poky/conf/templates/default/bblayers.conf.sample" \
+        "$YF_MOCK_BUILD_DIR/conf/bblayers.conf"
+fi
+
+BUILDDIR=$(CDPATH= cd -- "$YF_MOCK_BUILD_DIR" && pwd)
+export BUILDDIR
+cd "$BUILDDIR" || return 1
+unset YF_MOCK_BUILD_DIR

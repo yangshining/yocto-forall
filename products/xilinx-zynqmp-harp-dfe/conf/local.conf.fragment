@@ -1,0 +1,16 @@
+# Product-owned XSA and boot artifact policy.
+USE_XSCT_TARBALL = "1"
+HDF_MACHINE = "${MACHINE}"
+HDF_BASE = "file://"
+HDF_PATH = "${YOCTO_FORALL_REPO_ROOT}/products/xilinx-zynqmp-harp-dfe/hardware/system.xsa"
+
+RM_WORK_EXCLUDE += " \
+    device-tree \
+    petalinux-image-minimal \
+    fsbl-firmware \
+    u-boot-xlnx \
+    u-boot-zynq-scr \
+    arm-trusted-firmware \
+    "
+
+IMAGE_INSTALL:append = " low-level-init"

@@ -1,60 +1,59 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-This repository is a Yocto-based multi-BSP build workspace.
 
-- `components/layers/core/`: core layers (for example `poky`, `meta-openembedded`, `meta-arm`).
-- `components/layers/bsp/`: vendor BSP layers (Xilinx, NXP, Rockchip, STM32MP, Raspberry Pi) managed as submodules.
-- `components/layers/tools/`: tooling layers such as `meta-clang` and `meta-qt5`.
-- `platforms/common/meta-user/`: cross-platform customizations shared by all machines (priority 5).
-- `platforms/<name>/meta-<name>-user/`: platform-specific overrides (`recipes-bsp/`, `recipes-kernel/`, `recipes-support/`, `conf/`). Do not edit upstream submodule layers directly.
-- `configs/`: environment/bootstrap scripts and project defaults (`setup-env.sh`, `local-proj.conf`).
-- `docs/`: troubleshooting and platform-specific usage notes.
+This repository is a multi-Baseline Yocto Build Framework.
+
+- `baselines/<profile>/baseline.conf`: defines one pinned Yocto Series Baseline and its explicit core-layer paths.
+- `components/layers/baselines/<profile>/`: separate Poky, meta-openembedded, and meta-arm gitlinks for each profile.
+- `components/layers/bsp/`: vendor BSP layers. Never edit upstream submodule layers directly.
+- `platforms/<name>/`: reusable vendor/SoC-family integration, profile adapters, Reference Machine targets, and platform-owned metadata.
+- `products/<name>/`: Product Machines and all concrete hardware policy. The HARP DFE XSA and metadata live under `products/xilinx-zynqmp-harp-dfe/`.
+- `platforms/common/meta-user/`: customizations verified across all declared profiles.
+- `configs/`: environment/bootstrap scripts and project defaults.
+- `tests/`: fast setup/registry contract tests.
 
 ## Build, Test, and Development Commands
-- Initialize submodules:
-  ```bash
-  git submodule update --init --recursive
-  ```
-- Enter build environment (from repo root):
-  ```bash
-  . configs/setup-env.sh -m zynqmp-generic
-  ```
-- Build an image:
-  ```bash
-  bitbake petalinux-image-minimal
-  ```
-- Rebuild one component during iteration:
-  ```bash
-  bitbake -c cleansstate device-tree && bitbake device-tree
-  ```
-- Return to an existing build env:
-  ```bash
-  . build-<machine>/SOURCE_THIS
-  ```
+
+```bash
+git submodule update --init --recursive
+. configs/setup-env.sh -V
+. configs/setup-env.sh -l
+. configs/setup-env.sh -T harp-dfe-xczu67dr -p scarthgap
+bitbake petalinux-image-minimal
+```
+
+Compatibility selection remains available with `. configs/setup-env.sh -m <target-or-machine>`.
+
+Re-enter a build with:
+
+```bash
+. build/<profile>/<target>/SOURCE_THIS
+```
+
+Run fast contracts with `bash tests/setup-env-test.sh`. Rebuild one component with `bitbake -c cleansstate <recipe> && bitbake <recipe>`.
 
 ## Coding Style & Naming Conventions
-- Shell scripts use 4-space indentation and should remain POSIX-compatible unless Bash is required.
-- BitBake metadata follows existing naming patterns:
-  - Append files: `<recipe>_%.bbappend`
-  - Patches: numeric prefix + short subject (for example `0001-fix-...patch`)
-- Keep machine-specific settings in `configs/*.conf` or `platforms/<name>/meta-<name>-user/`; avoid editing upstream submodule layers directly.
+
+- Shell scripts use 4-space indentation and remain POSIX-compatible unless Bash is explicitly required.
+- BitBake append files use `<recipe>_%.bbappend` for versioned recipes and exact `<recipe>.bbappend` names for unversioned recipes; patches use a numeric prefix and short subject.
+- A target binds to exactly one Baseline Profile. `-p` is an assertion, not a switch.
+- A selected integration layer and its containing gitlink checkout belong to one Baseline Profile. Add another pinned checkout/path before using that source on another profile.
+- Keep series-specific layer lists/fragments in `platforms/<id>/baselines/` or `products/<id>/baselines/`.
+- Do not add `LAYERSERIES_COMPAT_*` overrides to force an upstream layer onto another series.
+- Keep product behavior out of `platforms/`; product-specific content belongs under `products/<product>/`.
 
 ## Testing Guidelines
-There is no standalone top-level unit test suite in this repo. Validate changes with targeted BitBake builds:
 
-- Recipe-level check: `bitbake <recipe>`
-- Image-level smoke build: `bitbake <image>`
-- For boot-impacting changes, verify artifacts under `build-<machine>/tmp/deploy/images/<machine>/`.
+- Registry/setup contracts: `bash tests/setup-env-test.sh`
+- Registry structure: `. configs/setup-env.sh -V`
+- Layer composition: `bitbake-layers show-layers`
+- Recipe parse: `bitbake -p`
+- Recipe/image checks: `bitbake <recipe-or-image>`
+- Boot artifacts: `build/<profile>/<target>/tmp/deploy/images/<machine>/`
 
 ## Commit & Pull Request Guidelines
-Use concise, scope-first imperative commit messages, for example:
 
-- `meta-user: enable xsct device-tree flow`
-- `kernel: add motorcomm phy patch`
+Use concise, scope-first imperative commit messages, for example `build: add whinlatter baseline profile` or `harp-dfe: update device tree`.
 
-PRs should include:
-- target machine(s) and image(s),
-- exact build/verification commands executed,
-- changed paths (especially under `platforms/<name>/meta-<name>-user/`),
-- logs or screenshots only when behavior/output changes.
+PRs should include target(s), Baseline Profile(s), image(s), exact verification commands, changed platform/product paths, and logs only when behavior or output changes.

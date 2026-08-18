@@ -1,0 +1,3 @@
+# Support multiple isolated Baseline Profiles on main
+
+The `main` branch may contain multiple Baseline Profiles so different SoC BSPs can use different coherent Yocto Series Baselines. Each Product Machine or Reference Machine binds to exactly one profile; profiles pin separate core and integration layers side by side, never switch a shared checkout at runtime, never mix layers across series, and never use compatibility overrides to hide a mismatch. This accepts greater storage and CI-matrix cost so one repository can coordinate heterogeneous BSP lifecycles without sacrificing per-build consistency.
