@@ -50,15 +50,16 @@ Do not assume the PL is configured because an XSA exists in the build. The check
 umask 0022
 . configs/setup-env.sh -T harp-dfe-xczu67dr -p scarthgap
 bitbake device-tree
+mkdir -p lessons
 dtc -I dtb -O dts \
   build/scarthgap/harp-dfe-xczu67dr/tmp/deploy/images/harp-dfe-xczu67dr/system.dtb \
-  > /tmp/harp-dfe-system.dts
+  > lessons/harp-dfe-system.dts
 ```
 
 Search for the first device named in the boot log and its parents:
 
 ```bash
-rg -n 'a0000000|interrupt-controller|amba_pl|status =' /tmp/harp-dfe-system.dts
+rg -n 'a0000000|interrupt-controller|amba_pl|status =' lessons/harp-dfe-system.dts
 ```
 
 Confirm whether a product fragment overrides the generated node and whether the node is enabled at boot.

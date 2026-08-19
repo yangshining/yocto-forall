@@ -52,6 +52,7 @@ Key rules:
 - Each selected platform/product layer and its containing gitlink checkout are owned by one Baseline Profile. A second profile needs a separate pinned checkout/path.
 - Generated builds live at `build/<profile>/<target>` and carry `conf/yocto-forall.manifest`; mismatched reuse must fail.
 - Default caches live under `.yocto-cache/<profile>/` and are never shared across profiles.
+- Store all agent-created temporary/work artifacts, including reports, screenshots, and scratch exports, under the repository's ignored `lessons/` directory; create it if absent and do not write project artifacts to `/tmp` or outside this repository.
 - Do not add compatibility overrides for upstream `LAYERSERIES_COMPAT`. Move the target to a coherent profile or port the layer honestly.
 
 ## Targets and Support

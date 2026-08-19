@@ -5,6 +5,7 @@ The files below describe the current repository. Target records and `configs/set
 ## Build Framework
 
 - [Architecture](architecture.md): registry model, selection flow, ownership boundaries, and build/cache isolation.
+- [Architecture review](architecture-review.html): evidence-backed module-deepening opportunities, priorities, and before/after diagrams.
 - [Building](building.md): host prerequisites, setup commands, re-entry, validation, and common failures.
 - [Adding support](adding-support.md): add targets, platforms, products, or Baseline Profiles without creating unsafe combinations.
 - [Layer versions](layers-versions.md): pinned core, BSP, and tool-layer revisions.

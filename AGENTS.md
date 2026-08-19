@@ -43,6 +43,7 @@ Run fast contracts with `bash tests/setup-env-test.sh`. Rebuild one component wi
 - Keep series-specific layer lists/fragments in `platforms/<id>/baselines/` or `products/<id>/baselines/`.
 - Do not add `LAYERSERIES_COMPAT_*` overrides to force an upstream layer onto another series.
 - Keep product behavior out of `platforms/`; product-specific content belongs under `products/<product>/`.
+- Store all agent-created temporary/work artifacts, including reports, screenshots, and scratch exports, under the repository's ignored `lessons/` directory; create it if absent and do not write project artifacts to `/tmp` or outside this repository.
 - When target bindings, layer pins, or support evidence change, update README, `docs/layers-versions.md`, CI, and the relevant platform/product guide in the same change.
 
 ## Testing Guidelines

@@ -93,9 +93,10 @@ build/scarthgap/harp-dfe-xczu67dr/tmp/deploy/images/harp-dfe-xczu67dr/
 Inspect the generated device tree:
 
 ```bash
+mkdir -p lessons
 dtc -I dtb -O dts \
   build/scarthgap/harp-dfe-xczu67dr/tmp/deploy/images/harp-dfe-xczu67dr/system.dtb \
-  > /tmp/harp-dfe-system.dts
+  > lessons/harp-dfe-system.dts
 ```
 
 ## Updating the XSA
