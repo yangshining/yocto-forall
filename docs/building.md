@@ -4,6 +4,8 @@
 
 Use a Yocto-supported Linux host. The CI reference environment is Ubuntu 22.04 and installs its package set in `.github/workflows/ci.yml`.
 
+Registry validation and setup require Python 3.8 or later and use only the Python standard library.
+
 Before setup:
 
 ```bash
@@ -99,6 +101,7 @@ Custom build directories still receive a manifest and cannot be reused for anoth
 ## Validation Commands
 
 ```bash
+python3 -m unittest tests.test_build_registry
 bash tests/setup-env-test.sh
 . configs/setup-env.sh -V
 . configs/setup-env.sh -T <target>

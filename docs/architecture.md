@@ -18,7 +18,9 @@ The framework never checks out a different branch at setup time. Selection choos
 | Product adapter | `products/<product>/baselines/<profile>.conf` | Product-owned layer and product fragment |
 | Product Machine | `products/<product>/targets/<target>.conf` | Concrete product target and evidence-backed Support Level |
 
-Target and adapter files are shell assignments sourced by `configs/setup-env.sh`. Values are validated before a build environment is created.
+Target and adapter files use a restricted, assignment-only declarative format. `configs/build_registry.py` parses them as data; neither Python nor `configs/setup-env.sh` executes or sources a Registry record.
+
+The Python Build Registry discovers every formal record, validates the complete Registry atomically, builds selector and Integration Source indexes, and composes one selected target. A malformed record anywhere makes validation, listing, and setup fail consistently. Independent issues are reported in deterministic path/field/rule order while relationship errors caused only by a malformed record are suppressed.
 
 ## Selection Flow
 
@@ -26,13 +28,20 @@ Target and adapter files are shell assignments sourced by `configs/setup-env.sh`
 -T target or -m selector
           |
           v
-explicit target record
+Python Build Registry
+discover -> parse -> validate -> index -> resolve -> compose
           |
           +--> Baseline Profile --> OEROOT + core layers
           |
           +--> Platform adapter --> BSP/tool layers + DISTRO + fragment
           |
           +--> optional Product adapter --> product layer + fragment
+          |
+          v
+versioned, white-listed line protocol
+          |
+          v
+POSIX setup-env.sh adapter
           |
           v
 build/<profile>/<target>/conf/{bblayers.conf,local.conf,yocto-forall.manifest}
@@ -52,6 +61,8 @@ Registry validation enforces these rules:
 6. A build combines layers from one target binding only. Compatibility overrides must not hide an upstream `LAYERSERIES_COMPAT` mismatch.
 
 `platforms/common/meta-user/` is the intentional exception to profile-specific integration ownership. It is project-owned metadata whose `LAYERSERIES_COMPAT` declaration is maintained across all selected profiles.
+
+The common layer remains outside the first-phase Build Registry. The POSIX adapter adds it after consuming the selected Registry composition.
 
 ## Generated State
 

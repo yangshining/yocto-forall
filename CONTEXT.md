@@ -8,6 +8,10 @@ This context defines the language used to separate reusable multi-BSP build capa
 The reusable repository-level capability for composing Yocto builds across multiple vendor and SoC families. It does not own hardware-product-specific behavior.
 _Avoid_: Product BSP, board repository
 
+**Build Registry**:
+The authoritative set of Baseline Profile, Platform Integration, Product Integration, Reference Machine, and Product Machine declarations from which a build target is selected and validated.
+_Avoid_: Machine list, setup configuration
+
 **Platform Integration**:
 The integration boundary for a vendor or SoC family. It exposes BSP capabilities without defining one concrete product's hardware policy.
 _Avoid_: Product, board configuration

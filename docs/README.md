@@ -1,11 +1,12 @@
 # Documentation
 
-The files below describe the current repository. Target records and `configs/setup-env.sh` remain the executable source of truth when prose and metadata disagree.
+The files below describe the current repository. Declarative Registry records compiled by `configs/build_registry.py`, together with the `configs/setup-env.sh` environment adapter, remain the implementation source of truth when prose and metadata disagree.
 
 ## Build Framework
 
 - [Architecture](architecture.md): registry model, selection flow, ownership boundaries, and build/cache isolation.
 - [Architecture review](architecture-review.html): evidence-backed module-deepening opportunities, priorities, and before/after diagrams.
+- [Build Registry design](registry-design.md): approved first-phase scope, interfaces, validation model, tests, migration, and acceptance criteria.
 - [Building](building.md): host prerequisites, setup commands, re-entry, validation, and common failures.
 - [Adding support](adding-support.md): add targets, platforms, products, or Baseline Profiles without creating unsafe combinations.
 - [Layer versions](layers-versions.md): pinned core, BSP, and tool-layer revisions.

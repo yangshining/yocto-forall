@@ -1,0 +1,3 @@
+# Treat Build Registry records as declarative data
+
+Build Registry records will retain their existing `.conf` paths, field names, comments, and multiline string lists during the first implementation phase, but they will be parsed as a restricted assignment-only data format rather than executed as shell code. The Python Build Registry will reject unknown or duplicate fields, substitutions, commands, conditionals, and other executable syntax; this preserves the current ownership layout and avoids a simultaneous JSON/TOML migration while removing record side effects and implicit shell-state coupling.

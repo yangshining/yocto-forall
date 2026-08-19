@@ -17,6 +17,7 @@ git submodule update --init --recursive
 . build/scarthgap/harp-dfe-xczu67dr/SOURCE_THIS
 bitbake petalinux-image-minimal
 bitbake -p
+python3 -m unittest tests.test_build_registry
 bash tests/setup-env-test.sh
 ```
 
@@ -83,11 +84,14 @@ bitbake -p
 
 Boot artifacts are under `build/<profile>/<target>/tmp/deploy/images/<machine>/`.
 
+During iterative development, run the smallest relevant local tests. Do not trigger the full remote CI matrix until the change is ready to merge, but require it before merging to `main`.
+
 ## Documentation Map
 
 | Topic | Document |
 |---|---|
 | Framework model and invariants | `docs/architecture.md` |
+| Approved Build Registry implementation | `docs/registry-design.md` |
 | Host setup, builds, and troubleshooting | `docs/building.md` |
 | Adding targets, platforms, products, or profiles | `docs/adding-support.md` |
 | Pinned upstream revisions | `docs/layers-versions.md` |

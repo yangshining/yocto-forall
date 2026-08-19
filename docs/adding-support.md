@@ -2,6 +2,8 @@
 
 Run `. configs/setup-env.sh -V` after every registry change. The registry is deliberately strict so an apparently convenient change cannot silently mix Yocto series or product ownership.
 
+Registry `.conf` files are declarative data, not shell scripts. Use only blank lines, comments, and allowed `FIELD="value"` assignments. Declared list fields may use a multiline double-quoted value. Variable expansion, command substitution, `export`, functions, conditionals, redirections, duplicate fields, unknown fields, and trailing commands are rejected.
+
 ## Target Record
 
 Each `targets/<target>.conf` defines:
@@ -47,6 +49,8 @@ Product policy must not be added to a platform directory.
 
 Product adapters are validated even when no target currently references them.
 
+Every profile named in `PRODUCT_BASELINES` requires exactly one matching `baselines/<profile>.conf`. Undeclared, mismatched, or orphaned adapters invalidate the complete Registry.
+
 ## Add a Platform to an Existing Profile
 
 1. Pin the vendor BSP source under `components/layers/bsp/` or an appropriate tool path.
@@ -70,6 +74,8 @@ Product adapters are validated even when no target currently references them.
 5. Record pins in `docs/layers-versions.md` and add the chosen parse representative to CI before claiming `Parse-Validated`.
 
 Platform adapters may use their own `platforms/<id>/` metadata but cannot reference another platform or any product path.
+
+Every profile named in `PLATFORM_BASELINES` requires exactly one matching `baselines/<profile>.conf`. Adapter filenames and their `PLATFORM_BASELINE_ID` values must agree.
 
 ## Support One Platform on Another Baseline
 
@@ -108,6 +114,7 @@ Do not promote a target based on a one-off developer build.
 ## Completion Checklist
 
 ```bash
+python3 -m unittest tests.test_build_registry
 bash -n configs/setup-env.sh proj_build.sh tests/setup-env-test.sh
 dash -n configs/setup-env.sh
 bash tests/setup-env-test.sh
@@ -117,5 +124,7 @@ bash tests/setup-env-test.sh
 bitbake-layers show-layers
 bitbake -p
 ```
+
+Python tests own Build Registry parsing, validation, indexing, resolution, and protocol behavior. Shell tests own the sourced interface, Bash/Dash compatibility, protocol consumption, generated configuration, and build-directory guards.
 
 For build- or boot-impacting changes, also build the declared image and record the exact command, artifact path, hardware identity, and result.

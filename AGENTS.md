@@ -32,7 +32,7 @@ Re-enter a build with:
 . build/<profile>/<target>/SOURCE_THIS
 ```
 
-Run fast contracts with `bash tests/setup-env-test.sh`. Rebuild one component with `bitbake -c cleansstate <recipe> && bitbake <recipe>`.
+Run Registry domain contracts with `python3 -m unittest tests.test_build_registry` and setup adapter contracts with `bash tests/setup-env-test.sh`. Rebuild one component with `bitbake -c cleansstate <recipe> && bitbake <recipe>`.
 
 ## Coding Style & Naming Conventions
 
@@ -48,12 +48,14 @@ Run fast contracts with `bash tests/setup-env-test.sh`. Rebuild one component wi
 
 ## Testing Guidelines
 
+- Registry domain behavior: `python3 -m unittest tests.test_build_registry`
 - Registry/setup contracts: `bash tests/setup-env-test.sh`
 - Registry structure: `. configs/setup-env.sh -V`
 - Layer composition: `bitbake-layers show-layers`
 - Recipe parse: `bitbake -p`
 - Recipe/image checks: `bitbake <recipe-or-image>`
 - Boot artifacts: `build/<profile>/<target>/tmp/deploy/images/<machine>/`
+- During iterative development, run the smallest relevant local tests; defer the full remote CI matrix until the change is ready to merge, but require it before merging to `main`.
 
 ## Commit & Pull Request Guidelines
 

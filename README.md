@@ -115,8 +115,10 @@ products/<product>/
   targets/<target>.conf                  Product Machine registry entries
   meta-*/                                product-owned metadata
 platforms/common/meta-user/              genuinely cross-profile metadata
-configs/setup-env.sh                     registry resolver and environment generator
-tests/setup-env-test.sh                  fast executable setup contracts
+configs/build_registry.py                declarative registry compiler and resolver
+configs/setup-env.sh                     POSIX environment and generated-state adapter
+tests/test_build_registry.py             registry domain contracts
+tests/setup-env-test.sh                  sourced adapter and generated-state contracts
 ```
 
 Do not edit upstream submodule layers. Reusable SoC-family integration belongs under `platforms/`; concrete hardware policy belongs under `products/`. The HARP DFE XSA, device tree, boot policy, kernel patches, and low-level initialization are therefore owned by `products/xilinx-zynqmp-harp-dfe/`.
@@ -131,6 +133,7 @@ Do not edit upstream submodule layers. Reusable SoC-family integration belongs u
 ## Validation
 
 ```bash
+python3 -m unittest tests.test_build_registry
 bash tests/setup-env-test.sh
 . configs/setup-env.sh -V
 . configs/setup-env.sh -T <target>

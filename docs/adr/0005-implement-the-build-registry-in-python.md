@@ -1,0 +1,3 @@
+# Implement the Build Registry in Python
+
+The Build Registry will be implemented in standard-library-only Python 3.8+ behind the existing POSIX-shell `configs/setup-env.sh` adapter. Python will own record loading, domain validation, indexing, selector resolution, and selected-record composition, while the shell adapter preserves the established sourced command interface and remains responsible for shell/environment integration; this accepts a second implementation language rather than continuing to expose registry structure, source ordering, and shared shell state to every caller, without adding a package-manager or virtual-environment dependency to setup.
