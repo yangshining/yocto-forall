@@ -7,3 +7,6 @@ PREFERRED_PROVIDER_u-boot = "u-boot-stm32mp"
 DISTRO_FEATURES:append = " systemd usrmerge"
 VIRTUAL-RUNTIME_init_manager = "systemd"
 VIRTUAL-RUNTIME_initscripts = "systemd-compat-units"
+
+# STM32MP157F-EV1 supports eMMC boot through the vendor FlashLayout flow.
+BOOTDEVICE_LABELS:append:stm32mp15-eval = " emmc"

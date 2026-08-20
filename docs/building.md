@@ -71,6 +71,25 @@ bitbake core-image-minimal
 
 The Tegra profile uses depth-one Git fetches for the pinned OE4T kernel sources and forces those fetches to HTTP/1.1. This avoids mirroring the full NVIDIA kernel history and improves reliability through proxies that reset long GitHub transfers. The first kernel fetch can still take several minutes because the current source tree is large; subsequent builds reuse the shallow tarball in `.yocto-cache/whinlatter/downloads/`.
 
+### STM32MP15 Eval eMMC
+
+The `stm32mp15-eval` target enables both the vendor SD-card flow and the STM32MP157F-EV1 eMMC FlashLayout flow:
+
+```bash
+umask 0022
+. configs/setup-env.sh -T stm32mp15-eval -p scarthgap
+bitbake core-image-minimal
+```
+
+The eMMC opt-in makes BitBake build the `opteemin-emmc` TF-A/FIP configuration and generate an eMMC TSV under:
+
+```text
+build/scarthgap/stm32mp15-eval/tmp/deploy/images/stm32mp15-eval/
+  flashlayout_core-image-minimal/opteemin/*emmc*.tsv
+```
+
+Use the generated TSV and referenced binaries with STM32CubeProgrammer. This target is Parse-Validated; successful image generation and booting from eMMC still require build and board evidence before raising its Support Level.
+
 ## Re-enter a Build
 
 ```bash

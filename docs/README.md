@@ -17,6 +17,10 @@ The files below describe the current repository. Declarative Registry records co
 
 - [Xilinx ZynqMP HARP DFE](../products/xilinx-zynqmp-harp-dfe/README.md)
 
+## Platform Integrations
+
+- [STM32MP](../platforms/stm32mp/README.md): STM32MP15 reference targets, eMMC/SD-card boot policy, build outputs, and validation.
+
 ## Agent Workflows
 
 - [Issue tracker](agents/issue-tracker.md)

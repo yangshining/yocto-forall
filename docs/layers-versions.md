@@ -42,6 +42,8 @@ Profile definitions and their explicit layer lists are in `baselines/<profile>/b
 
 Not every checked-in BSP layer is enabled by the current platform adapter. The adapter in `platforms/<platform>/baselines/<profile>.conf` is authoritative.
 
+The STM32MP Scarthgap adapter selects `meta-st-stm32mp`. Project-owned policy in `platforms/stm32mp/conf/local.conf.fragment` enables the vendor-provided `emmc` boot-device configuration only for `stm32mp15-eval`; `stm32mp15-disco` remains SD-card-only. The eval target is included in the CI parse matrix, but eMMC image-build and hardware-boot evidence are not yet claimed.
+
 ## Tool Layers
 
 | Layer | Path | Pinned commit | Profile ownership |

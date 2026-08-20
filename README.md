@@ -19,7 +19,7 @@ Core layers are checked out side by side under `components/layers/baselines/<pro
 | `harp-dfe-xczu67dr` | `harp-dfe-xczu67dr` | `scarthgap` | Parse-Validated |
 | `zynqmp-generic` | `zynqmp-generic` | `scarthgap` | Parse-Validated |
 | `stm32mp15-disco` | `stm32mp15-disco` | `scarthgap` | Parse-Validated |
-| `stm32mp15-eval` | `stm32mp15-eval` | `scarthgap` | Declared |
+| `stm32mp15-eval` | `stm32mp15-eval` | `scarthgap` | Parse-Validated |
 | `ls1043ardb` | `ls1043ardb` | `kirkstone` | Parse-Validated |
 | `ls1088ardb`, `lx2160ardb`, `ls1028ardb` | same as target | `kirkstone` | Declared |
 | `rk3568-evb` | `rockchip-rk3568-evb` | `whinlatter` | Parse-Validated |

@@ -49,6 +49,9 @@ jobs:
           - baseline: scarthgap
             target: stm32mp15-disco
             machine: stm32mp15-disco
+          - baseline: scarthgap
+            target: stm32mp15-eval
+            machine: stm32mp15-eval
           - baseline: whinlatter
             target: raspberrypi4-64
             machine: raspberrypi4-64
@@ -112,6 +115,28 @@ jobs:
         run: |
           . "build/$MATRIX_BASELINE/$MATRIX_TARGET/SOURCE_THIS"
           bitbake-layers show-layers
+
+      - name: Verify STM32MP15 Eval eMMC composition
+        if: matrix.target == 'stm32mp15-eval'
+        shell: bash
+        run: |
+          . "build/${{ matrix.baseline }}/${{ matrix.target }}/SOURCE_THIS"
+          while read -r variable expected; do
+            value=$(bitbake-getvar --value "$variable" | tail -n 1)
+            case " $value " in
+              *" $expected "*) ;;
+              *)
+                echo "ERROR: $variable does not contain $expected: $value"
+                exit 1
+                ;;
+            esac
+          done <<'EOF'
+          BOOTDEVICE_LABELS emmc
+          TF_A_CONFIG opteemin-emmc
+          FIP_CONFIG opteemin-emmc
+          FLASHLAYOUT_CONFIG_LABELS emmc
+          STM32MP_DT_FILES_EMMC stm32mp157f-ev1
+          EOF
 
       - name: Parse recipes
         env:

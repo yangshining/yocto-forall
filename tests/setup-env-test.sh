@@ -284,6 +284,39 @@ EOF
     pass "setup rejects malformed Build Registry protocols"
 }
 
+test_stm32mp15_eval_enables_emmc_boot_policy() {
+    fixture=$(mktemp -d "$REPO_ROOT/lessons/build-registry/stm32mp15-eval.XXXXXX")
+    TEST_TEMP_DIRS="$TEST_TEMP_DIRS $fixture"
+    cp -R "$REPO_ROOT/tests/fixtures/minimal/." "$fixture/"
+
+    mv "$fixture/platforms/fixture-platform" "$fixture/platforms/stm32mp"
+    sed -i 's/fixture-platform/stm32mp/g' \
+        "$fixture/platforms/stm32mp/platform.conf" \
+        "$fixture/platforms/stm32mp/baselines/test.conf" \
+        "$fixture/platforms/stm32mp/targets/fixture-target.conf"
+    mv "$fixture/platforms/stm32mp/targets/fixture-target.conf" \
+        "$fixture/platforms/stm32mp/targets/stm32mp15-eval.conf"
+    sed -i \
+        -e 's/TARGET_ID="fixture-target"/TARGET_ID="stm32mp15-eval"/' \
+        -e 's/TARGET_MACHINE="fixture-machine"/TARGET_MACHINE="stm32mp15-eval"/' \
+        -e 's/TARGET_ALIASES="fixture-machine"/TARGET_ALIASES=""/' \
+        "$fixture/platforms/stm32mp/targets/stm32mp15-eval.conf"
+    rm -f "$fixture/platforms/stm32mp/targets/second-target.conf"
+    rm -rf "$fixture/products"
+    cp "$REPO_ROOT/platforms/stm32mp/conf/local.conf.fragment" \
+        "$fixture/platforms/stm32mp/conf/local.conf.fragment"
+    TEST_TOP_DIR=$fixture
+
+    capture_setup -T stm32mp15-eval
+    assert_status 0 "STM32MP15 eval setup exits successfully" || { TEST_TOP_DIR=""; return; }
+    assert_file_contains "$fixture/build/test/stm32mp15-eval/conf/local.conf" \
+        'BOOTDEVICE_LABELS:append:stm32mp15-eval = " emmc"' \
+        "STM32MP15 eval generated configuration enables eMMC" || { TEST_TOP_DIR=""; return; }
+
+    TEST_TOP_DIR=""
+    pass "STM32MP15 eval owns an explicit eMMC boot policy"
+}
+
 test_direct_execution_and_dash_compatibility() {
     OUTPUT=$("$SETUP_SCRIPT" -h 2>&1)
     STATUS=$?
@@ -387,6 +420,7 @@ test_unknown_target_fails
 test_registry_validation
 test_registry_records_are_not_executed
 test_malformed_registry_protocol_is_rejected
+test_stm32mp15_eval_enables_emmc_boot_policy
 test_direct_execution_and_dash_compatibility
 test_generated_configuration_and_manifest_guard
 
